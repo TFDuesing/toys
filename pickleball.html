@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pickleball Scorekeeper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+
+    :root {
+      --gold: #c4973a;       /* amber — used only on dark card2 bg */
+      --gold-dark: #a87d2e;
+      --gold-btn: #b8870a;   /* darker amber for light-bg active badges */
+      --sage: #2e6147;       /* deep sage — white text on top */
+      --sage-dark: #1f4f38;
+      --red: #8b2e1a;
+      --bg: #f4efe3;         /* warm limestone cream */
+      --card: #ece6d4;       /* slightly deeper cream */
+      --card2: #172436;      /* deep lake navy — high-contrast callout */
+      --text: #1c1a10;       /* very dark charcoal */
+      --muted: #6a5e4c;      /* warm medium brown-gray */
+      --border: #c8bea0;     /* warm stone border */
+      --border2: #263d54;    /* navy border for card2 */
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Optima', 'Gill Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .subtitle {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 22px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    /* Game info bar */
+    .game-info {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .info-pill {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .info-pill span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Score call banner */
+    .callout {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .callout-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #a8c4d8;
+      margin-bottom: 4px;
+    }
+
+    .callout-score {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--gold);
+    }
+
+    /* Scoreboard */
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 16px;
+    }
+
+    .team-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .team-card.serving {
+      border-color: var(--gold-btn);
+      box-shadow: 0 0 12px rgba(184,135,10,0.22);
+    }
+
+    .team-card.winning {
+      border-color: var(--sage);
+      box-shadow: 0 0 18px rgba(92,136,112,0.18);
+    }
+
+    .team-card.winning.serving {
+      border-color: var(--sage);
+      box-shadow: 0 0 22px rgba(92,136,112,0.28);
+    }
+
+    .serve-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold-btn);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 50px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .team-card.serving .serve-badge { opacity: 1; }
+
+    .team-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Doubles player chips */
+    .player-list {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .player {
+      font-size: 0.76rem;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 3px 10px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      max-width: 96px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player.active-server {
+      background: var(--gold-btn);
+      color: #fff;
+      font-weight: 700;
+      border-color: var(--gold-btn);
+    }
+
+    .score-display {
+      font-size: 5rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -2px;
+      color: var(--text);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.1s, opacity 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button:active { transform: scale(0.93); }
+
+    .btn-score {
+      background: var(--sage);
+      color: #fff;
+      width: 56px;
+      height: 56px;
+      font-size: 1.8rem;
+    }
+
+    .btn-score:hover { background: var(--sage-dark); }
+
+    .btn-undo {
+      background: var(--border);
+      color: var(--muted);
+      width: 40px;
+      height: 56px;
+      font-size: 1.1rem;
+    }
+
+    .btn-undo:hover { background: #b8b09a; color: var(--text); }
+
+    /* Serve controls */
+    .serve-controls {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .serve-row + .serve-row {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .serve-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .serve-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-serve {
+      flex: 1;
+      height: 44px;
+      background: var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-serve.active {
+      background: var(--gold-btn);
+      color: #fff;
+    }
+
+    .btn-serve:hover:not(.active) { background: #b8b09a; color: var(--text); }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 16px;
+    }
+
+    .btn-action {
+      flex: 1;
+      height: 44px;
+      background: var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+
+    .btn-action:hover { background: #b8b09a; color: var(--text); }
+    .btn-action.danger:hover { background: rgba(139,46,26,0.14); color: var(--red); }
+
+    /* Settings panel */
+    .settings {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .settings-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .setting-row:last-child { margin-bottom: 0; }
+
+    .setting-label { font-size: 0.85rem; color: var(--text); }
+    .setting-sublabel { font-size: 0.78rem; color: var(--muted); padding-left: 10px; }
+
+    .setting-row input[type="text"] {
+      background: var(--border);
+      border: 1px solid #4a4232;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      width: 120px;
+      text-align: center;
+    }
+
+    .setting-row input[type="number"] {
+      background: var(--border);
+      border: 1px solid #4a4232;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      width: 64px;
+      text-align: center;
+    }
+
+    input:focus { outline: 2px solid var(--gold); border-color: transparent; }
+
+    .btn-toggle {
+      height: 32px;
+      padding: 0 16px;
+      background: var(--border);
+      color: var(--muted);
+      border-radius: 50px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      border: none;
+    }
+
+    .btn-toggle.on {
+      background: var(--sage);
+      color: #fff;
+    }
+
+    /* Win modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(28,26,16,0.72);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border: 2px solid var(--sage);
+      border-radius: 18px;
+      padding: 36px 28px;
+      text-align: center;
+      max-width: 320px;
+      width: 90%;
+      box-shadow: 0 0 40px rgba(92,136,112,0.25);
+    }
+
+    .modal-emoji { font-size: 3rem; margin-bottom: 10px; }
+    .modal-title { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: var(--sage); margin-bottom: 6px; }
+    .modal-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 24px; }
+
+    .btn-new-game {
+      background: var(--sage);
+      color: #fff;
+      border-radius: 10px;
+      padding: 14px 32px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-new-game:hover { background: var(--sage-dark); }
+    .btn-new-game:active { transform: scale(0.97); }
+
+    .hidden { display: none !important; }
+
+    /* Rules panel */
+    .rules {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .rules-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .rules-section {
+      margin-bottom: 12px;
+    }
+
+    .rules-section:last-child { margin-bottom: 0; }
+
+    .rules-section h3 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--sage);
+      margin-bottom: 5px;
+    }
+
+    .rules-section ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .rules-section ul li {
+      font-size: 0.82rem;
+      color: var(--text);
+      padding: 3px 0 3px 14px;
+      position: relative;
+      line-height: 1.4;
+    }
+
+    .rules-section ul li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Pickleball</h1>
+  <p class="subtitle">Scorekeeper</p>
+
+  <!-- Score call banner -->
+  <div class="callout">
+    <div class="callout-label">Score Call</div>
+    <div class="callout-score" id="scoreCall">0 – 0</div>
+  </div>
+
+  <!-- Game info pills -->
+  <div class="game-info">
+    <div class="info-pill">Game <span id="gameNum">1</span></div>
+    <div class="info-pill">To <span id="winScoreDisplay">11</span></div>
+    <div class="info-pill hidden" id="serverPill">Server <span id="serverNum">1</span></div>
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <div class="team-card" id="card0">
+      <div class="serve-badge" id="badge0">Serving</div>
+      <div class="team-name" id="name0">Team 1</div>
+      <div class="player-list hidden" id="playerList0">
+        <span class="player" id="player0-0">Player A</span>
+        <span class="player" id="player0-1">Player B</span>
+      </div>
+      <div class="score-display" id="score0">0</div>
+      <div class="btn-group">
+        <button class="btn-undo" onclick="decrementPoint(0)" title="Remove point from Team 1">↩</button>
+        <button class="btn-score" onclick="addPoint(0)" aria-label="Add point to Team 1">+</button>
+      </div>
+    </div>
+
+    <div class="team-card serving" id="card1">
+      <div class="serve-badge" id="badge1">Serving</div>
+      <div class="team-name" id="name1">Team 2</div>
+      <div class="player-list hidden" id="playerList1">
+        <span class="player" id="player1-0">Player A</span>
+        <span class="player" id="player1-1">Player B</span>
+      </div>
+      <div class="score-display" id="score1">0</div>
+      <div class="btn-group">
+        <button class="btn-undo" onclick="decrementPoint(1)" title="Remove point from Team 2">↩</button>
+        <button class="btn-score" onclick="addPoint(1)" aria-label="Add point to Team 2">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual serve override -->
+  <div class="serve-controls">
+    <div class="serve-row">
+      <div class="serve-label">Serving Team</div>
+      <div class="serve-btns">
+        <button class="btn-serve" id="serveBtn0" onclick="setServe(0)">Team 1</button>
+        <button class="btn-serve active" id="serveBtn1" onclick="setServe(1)">Team 2</button>
+      </div>
+    </div>
+    <!-- Doubles-only: override which player on the serving team is up -->
+    <div class="serve-row hidden" id="serverOverrideRow">
+      <div class="serve-label">Current Server</div>
+      <div class="serve-btns">
+        <button class="btn-serve" id="serverBtn1" onclick="setServer(1)">Player A</button>
+        <button class="btn-serve" id="serverBtn2" onclick="setServer(2)">Player B</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="actions">
+    <button class="btn-action" onclick="toggleRules()">&#9432; Rules</button>
+    <button class="btn-action" onclick="toggleSettings()">&#9881; Settings</button>
+    <button class="btn-action danger" onclick="confirmReset()">New Game</button>
+  </div>
+
+  <!-- Rules panel -->
+  <div class="rules hidden" id="rulesPanel">
+    <div class="rules-title">Pickleball Rules Overview</div>
+    <div class="rules-section">
+      <h3>Scoring</h3>
+      <ul>
+        <li>Only the serving team can score a point</li>
+        <li>Games are typically played to 11, win by 2</li>
+        <li>Tournament games may go to 15 or 21</li>
+        <li>Doubles score call: Server – Receiver – Server# (1 or 2)</li>
+        <li>Singles score call: Server – Receiver</li>
+      </ul>
+    </div>
+    <div class="rules-section">
+      <h3>Serving</h3>
+      <ul>
+        <li>Serve must be hit underhand, below the waist</li>
+        <li>Serve diagonally into the opposite service box</li>
+        <li>Both feet must be behind the baseline when serving</li>
+        <li>In doubles, each partner serves before a side-out (except the very first serve of the game)</li>
+        <li>A let serve (hits the net and lands in) is replayed</li>
+      </ul>
+    </div>
+    <div class="rules-section">
+      <h3>The Kitchen (NVZ)</h3>
+      <ul>
+        <li>The non-volley zone (NVZ) extends 7 ft from the net on each side</li>
+        <li>You cannot volley (hit the ball out of the air) while standing in the kitchen</li>
+        <li>You may enter the kitchen to play a ball that has bounced</li>
+        <li>You must exit the kitchen before volleying again</li>
+      </ul>
+    </div>
+    <div class="rules-section">
+      <h3>Double-Bounce Rule</h3>
+      <ul>
+        <li>After the serve, each side must let the ball bounce once before volleying</li>
+        <li>Once both sides have hit a ground stroke, volleys are allowed</li>
+      </ul>
+    </div>
+    <div class="rules-section">
+      <h3>Faults</h3>
+      <ul>
+        <li>Ball lands out of bounds</li>
+        <li>Ball hits the net</li>
+        <li>Volleying from the kitchen</li>
+        <li>Violating the double-bounce rule</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Settings panel -->
+  <div class="settings hidden" id="settingsPanel">
+    <div class="settings-title">Settings</div>
+    <div class="setting-row">
+      <span class="setting-label">Doubles Mode</span>
+      <button class="btn-toggle" id="doublesToggle" onclick="toggleDoubles()">Off</button>
+    </div>
+    <div class="setting-row">
+      <label class="setting-label" for="nameInput0">Team 1 Name</label>
+      <input type="text" id="nameInput0" value="Team 1" maxlength="16" oninput="updateName(0)" />
+    </div>
+    <div class="setting-row hidden" id="p0-0-row">
+      <label class="setting-sublabel" for="pname0-0">&#8627; Player A</label>
+      <input type="text" id="pname0-0" value="Player A" maxlength="14" oninput="updatePlayerName(0,0)" />
+    </div>
+    <div class="setting-row hidden" id="p0-1-row">
+      <label class="setting-sublabel" for="pname0-1">&#8627; Player B</label>
+      <input type="text" id="pname0-1" value="Player B" maxlength="14" oninput="updatePlayerName(0,1)" />
+    </div>
+    <div class="setting-row">
+      <label class="setting-label" for="nameInput1">Team 2 Name</label>
+      <input type="text" id="nameInput1" value="Team 2" maxlength="16" oninput="updateName(1)" />
+    </div>
+    <div class="setting-row hidden" id="p1-0-row">
+      <label class="setting-sublabel" for="pname1-0">&#8627; Player A</label>
+      <input type="text" id="pname1-0" value="Player A" maxlength="14" oninput="updatePlayerName(1,0)" />
+    </div>
+    <div class="setting-row hidden" id="p1-1-row">
+      <label class="setting-sublabel" for="pname1-1">&#8627; Player B</label>
+      <input type="text" id="pname1-1" value="Player B" maxlength="14" oninput="updatePlayerName(1,1)" />
+    </div>
+    <div class="setting-row">
+      <label class="setting-label" for="winScoreInput">Play to</label>
+      <input type="number" id="winScoreInput" value="11" min="5" max="21" oninput="updateWinScore()" />
+    </div>
+  </div>
+
+  <!-- Win modal -->
+  <div class="modal-overlay" id="winModal">
+    <div class="modal">
+      <div class="modal-emoji">&#127942;</div>
+      <div class="modal-title" id="winnerName">Team 1 Wins!</div>
+      <div class="modal-sub" id="winnerScore">11 – 7</div>
+      <button class="btn-new-game" onclick="resetGame()">New Game</button>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      scores: [0, 0],
+      servingTeam: 1,       // 0 or 1
+      serverNum: 2,         // 1 or 2 (doubles server within the serving team)
+      gameNum: 1,
+      winScore: 11,
+      names: ['Team 1', 'Team 2'],
+      playerNames: [['Player A', 'Player B'], ['Player A', 'Player B']],
+      doublesMode: false,
+      history: [],
+    };
+
+    function takeSnapshot() {
+      return {
+        scores: [...state.scores],
+        servingTeam: state.servingTeam,
+        serverNum: state.serverNum,
+      };
+    }
+
+    function addPoint(team) {
+      state.history.push(takeSnapshot());
+      state.scores[team]++;
+      if (team !== state.servingTeam) sideOut();
+      render();
+      checkWin();
+    }
+
+    function undoPoint() {
+      if (state.history.length === 0) return;
+      const prev = state.history.pop();
+      state.scores = prev.scores;
+      state.servingTeam = prev.servingTeam;
+      state.serverNum = prev.serverNum;
+      render();
+    }
+
+    function decrementPoint(team) {
+      if (state.scores[team] === 0) return;
+      state.scores[team]--;
+      render();
+    }
+
+    function sideOut() {
+      if (!state.doublesMode) {
+        // Singles: serve goes directly to the other team
+        state.servingTeam = 1 - state.servingTeam;
+      } else {
+        // Doubles: server 1 → server 2 → other team's server 1
+        if (state.serverNum === 1) {
+          state.serverNum = 2;
+        } else {
+          state.servingTeam = 1 - state.servingTeam;
+          state.serverNum = 1;
+        }
+      }
+    }
+
+    function setServe(team) {
+      state.history.push(takeSnapshot());
+      state.servingTeam = team;
+      state.serverNum = 1;
+      render();
+    }
+
+    function setServer(num) {
+      state.history.push(takeSnapshot());
+      state.serverNum = num;
+      render();
+    }
+
+    function toggleDoubles() {
+      state.doublesMode = !state.doublesMode;
+      render();
+    }
+
+    function render() {
+      const { scores, servingTeam, serverNum, names, winScore, gameNum, doublesMode, playerNames } = state;
+
+      // Scores
+      document.getElementById('score0').textContent = scores[0];
+      document.getElementById('score1').textContent = scores[1];
+
+      // Info pills
+      document.getElementById('gameNum').textContent = gameNum;
+      document.getElementById('winScoreDisplay').textContent = winScore;
+      document.getElementById('serverNum').textContent = serverNum;
+      document.getElementById('serverPill').classList.toggle('hidden', !doublesMode);
+
+      // Team names
+      document.getElementById('name0').textContent = names[0];
+      document.getElementById('name1').textContent = names[1];
+
+      // Player chips in team cards
+      for (let t = 0; t < 2; t++) {
+        document.getElementById('playerList' + t).classList.toggle('hidden', !doublesMode);
+        for (let p = 0; p < 2; p++) {
+          const el = document.getElementById('player' + t + '-' + p);
+          el.textContent = playerNames[t][p];
+          const isServer = doublesMode && t === servingTeam && (p + 1) === serverNum;
+          el.classList.toggle('active-server', isServer);
+        }
+      }
+
+      // Serve badge: show serving player's name in doubles, "Serving" in singles
+      for (let t = 0; t < 2; t++) {
+        const badge = document.getElementById('badge' + t);
+        badge.textContent = (doublesMode && t === servingTeam)
+          ? playerNames[t][serverNum - 1]
+          : 'Serving';
+      }
+
+      // Card border/glow states
+      for (let i = 0; i < 2; i++) {
+        const card = document.getElementById('card' + i);
+        card.classList.toggle('serving', i === servingTeam);
+        card.classList.toggle('winning', scores[i] > scores[1 - i]);
+      }
+
+      // Team override buttons
+      for (let i = 0; i < 2; i++) {
+        const btn = document.getElementById('serveBtn' + i);
+        btn.textContent = names[i];
+        btn.classList.toggle('active', i === servingTeam);
+      }
+
+      // Server override row (doubles only)
+      document.getElementById('serverOverrideRow').classList.toggle('hidden', !doublesMode);
+      if (doublesMode) {
+        const s1 = document.getElementById('serverBtn1');
+        const s2 = document.getElementById('serverBtn2');
+        s1.textContent = playerNames[servingTeam][0];
+        s2.textContent = playerNames[servingTeam][1];
+        s1.classList.toggle('active', serverNum === 1);
+        s2.classList.toggle('active', serverNum === 2);
+      }
+
+      // Doubles toggle button
+      const tog = document.getElementById('doublesToggle');
+      tog.textContent = doublesMode ? 'On' : 'Off';
+      tog.classList.toggle('on', doublesMode);
+
+      // Player name inputs in settings (show only in doubles mode)
+      ['p0-0-row', 'p0-1-row', 'p1-0-row', 'p1-1-row'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', !doublesMode);
+      });
+
+      // Score call format differs by mode
+      const sScore = scores[servingTeam];
+      const rScore = scores[1 - servingTeam];
+      document.getElementById('scoreCall').textContent = doublesMode
+        ? sScore + ' \u2013 ' + rScore + ' \u2013 ' + serverNum
+        : sScore + ' \u2013 ' + rScore;
+    }
+
+    function checkWin() {
+      const { scores, winScore, names } = state;
+      for (let i = 0; i < 2; i++) {
+        if (scores[i] >= winScore && scores[i] - scores[1 - i] >= 2) {
+          document.getElementById('winnerName').textContent = names[i] + ' Wins!';
+          document.getElementById('winnerScore').textContent =
+            scores[i] + ' \u2013 ' + scores[1 - i];
+          document.getElementById('winModal').classList.add('show');
+          return;
+        }
+      }
+    }
+
+    function confirmReset() {
+      if (state.scores[0] === 0 && state.scores[1] === 0) {
+        resetGame();
+      } else if (confirm('Start a new game?')) {
+        resetGame();
+      }
+    }
+
+    function resetGame() {
+      document.getElementById('winModal').classList.remove('show');
+      state.scores = [0, 0];
+      state.servingTeam = 1;
+      // Doubles: first serving team starts with server 2 (traditional rule)
+      // Singles: server number unused, set to 1
+      state.serverNum = state.doublesMode ? 2 : 1;
+      state.gameNum++;
+      state.history = [];
+      render();
+    }
+
+    function updateName(team) {
+      const val = document.getElementById('nameInput' + team).value.trim();
+      state.names[team] = val || 'Team ' + (team + 1);
+      render();
+    }
+
+    function updatePlayerName(team, idx) {
+      const val = document.getElementById('pname' + team + '-' + idx).value.trim();
+      state.playerNames[team][idx] = val || (idx === 0 ? 'Player A' : 'Player B');
+      render();
+    }
+
+    function updateWinScore() {
+      const val = parseInt(document.getElementById('winScoreInput').value, 10);
+      if (!isNaN(val) && val >= 5 && val <= 21) state.winScore = val;
+      render();
+    }
+
+    function toggleSettings() {
+      const settings = document.getElementById('settingsPanel');
+      const rules = document.getElementById('rulesPanel');
+      const wasHidden = settings.classList.contains('hidden');
+      rules.classList.add('hidden');
+      settings.classList.toggle('hidden', !wasHidden);
+    }
+
+    function toggleRules() {
+      const rules = document.getElementById('rulesPanel');
+      const settings = document.getElementById('settingsPanel');
+      const wasHidden = rules.classList.contains('hidden');
+      settings.classList.add('hidden');
+      rules.classList.toggle('hidden', !wasHidden);
+    }
+
+    // Initial render
+    render();
+
+    // Prevent double-tap zoom on iOS (CSS touch-action alone is insufficient on some versions)
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+      const now = Date.now();
+      if (now - lastTouchEnd < 300) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</body>
+</html>
