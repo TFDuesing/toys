@@ -215,20 +215,42 @@
     .source-badge.mixed      { background: #EDE9FE; color: #4C1D95; }
 
     .unit-toggle {
-      background: var(--sky-light);
-      color: var(--sky-dark);
+      display: flex;
       border: 1.5px solid #BFDBFE;
       border-radius: 8px;
-      padding: 4px 12px;
+      overflow: hidden;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .unit-toggle button {
+      background: none;
+      border: none;
+      padding: 4px 10px;
       font-size: 0.85rem;
       font-weight: 700;
       font-family: inherit;
       cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
+      color: #93C5FD;
+      transition: background 0.15s, color 0.15s;
     }
 
-    .unit-toggle:hover { background: #DBEAFE; }
+    .unit-toggle button.active {
+      background: var(--sky-light);
+      color: var(--sky-dark);
+      cursor: default;
+    }
+
+    .unit-toggle button:not(.active):hover {
+      background: #EFF6FF;
+      color: var(--sky-dark);
+    }
+
+    .unit-toggle .divider {
+      width: 1.5px;
+      background: #BFDBFE;
+      flex-shrink: 0;
+    }
 
     /* Temperature display */
     .temp-range-bar {
@@ -388,7 +410,11 @@
     </div>
     <div class="controls">
       <span class="source-badge" id="source-badge"></span>
-      <button class="unit-toggle" id="unit-toggle" onclick="toggleUnit()">°C</button>
+      <div class="unit-toggle" id="unit-toggle">
+        <button id="unit-btn-f" onclick="setUnit('F')" class="active">°F</button>
+        <div class="divider"></div>
+        <button id="unit-btn-c" onclick="setUnit('C')">°C</button>
+      </div>
     </div>
   </div>
 
@@ -720,7 +746,7 @@ function renderTemps() {
   document.getElementById('temp-low').textContent  = fmtTemp(troughMinC);
   document.getElementById('temp-avg').textContent  = fmtTemp(avgMaxC);
   document.getElementById('temp-high').textContent = fmtTemp(peakMaxC);
-  document.getElementById('unit-toggle').textContent = currentUnit === 'C' ? '°F' : '°C';
+
 
   // Update range highlight bar
   const lo  = tempToPct(troughMinC);
@@ -757,8 +783,11 @@ function displayResults(locationData, startStr, endStr, weather, stats, rec) {
 }
 
 // ─── Unit Toggle ──────────────────────────────────────────────────────────────
-function toggleUnit() {
-  currentUnit = currentUnit === 'C' ? 'F' : 'C';
+function setUnit(unit) {
+  if (unit === currentUnit) return;
+  currentUnit = unit;
+  document.getElementById('unit-btn-f').classList.toggle('active', unit === 'F');
+  document.getElementById('unit-btn-c').classList.toggle('active', unit === 'C');
   renderTemps();
 }
 
