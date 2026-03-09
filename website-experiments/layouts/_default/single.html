@@ -1,0 +1,103 @@
+{{ define "breadcrumb" }}<a href="/essays/">Essays</a> / {{ .Title }}{{ end }}
+
+{{ define "main" }}
+<style>
+  .essay-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid #444c5e;
+  }
+
+  .essay-header h1 {
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+    font-weight: bold;
+    line-height: 1.3;
+    margin-bottom: 0.6rem;
+  }
+
+  .essay-meta {
+    font-size: 0.85rem;
+    color: #8a96aa;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .essay-description {
+    margin-top: 0.8rem;
+    font-style: italic;
+    color: #8a96aa;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .essay-body {
+    line-height: 1.75;
+    font-size: clamp(1rem, 2.2vw, 1.15rem);
+  }
+
+  .essay-body p {
+    margin-bottom: 1.4em;
+    font-style: normal;
+  }
+
+  .essay-body h2 {
+    font-size: 1.3rem;
+    margin: 2em 0 0.6em;
+    border-bottom: 1px solid #3a4254;
+    padding-bottom: 0.3em;
+  }
+
+  .essay-body h3 {
+    font-size: 1.1rem;
+    margin: 1.5em 0 0.4em;
+  }
+
+  .essay-body a { color: #a8b4c8; }
+  .essay-body a:hover { color: #e8e4dc; }
+
+  .essay-body blockquote {
+    border-left: 3px solid #444c5e;
+    margin: 1.5em 0;
+    padding: 0.5em 1.2em;
+    color: #8a96aa;
+    font-style: italic;
+  }
+
+  .essay-body ul,
+  .essay-body ol {
+    margin: 0 0 1.4em 1.5em;
+  }
+
+  .essay-body li { margin-bottom: 0.4em; }
+
+  .essay-body code {
+    background: #3a4254;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.9em;
+    font-family: monospace;
+  }
+
+  .essay-body pre {
+    background: #3a4254;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 1.4em;
+  }
+
+  .essay-body pre code {
+    background: none;
+    padding: 0;
+  }
+</style>
+
+<article>
+  <header class="essay-header">
+    <h1>{{ .Title }}</h1>
+    <div class="essay-meta">{{ .Date.Format "January 2, 2006" }}</div>
+    {{ with .Params.description }}<div class="essay-description">{{ . }}</div>{{ end }}
+  </header>
+  <div class="essay-body">{{ .Content }}</div>
+</article>
+{{ end }}
