@@ -1,0 +1,89 @@
+{{ define "breadcrumb" }}Essays{{ end }}
+
+{{ define "main" }}
+<style>
+  .essays-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #444c5e;
+  }
+
+  .essays-header h1 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    font-weight: bold;
+  }
+
+  .essays-intro {
+    margin-top: 0.5rem;
+    font-style: italic;
+    color: #8a96aa;
+    font-size: 1rem;
+  }
+
+  .essay-list { list-style: none; }
+
+  .essay-item {
+    padding: 1.4rem 0;
+    border-bottom: 1px solid #3a4254;
+  }
+
+  .essay-item:last-child { border-bottom: none; }
+
+  .essay-date {
+    font-size: 0.85rem;
+    color: #8a96aa;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  .essay-title {
+    font-size: clamp(1.1rem, 3vw, 1.35rem);
+    margin-bottom: 0.4rem;
+  }
+
+  .essay-title a {
+    color: #e8e4dc;
+    text-decoration: none;
+    font-style: normal;
+  }
+
+  .essay-title a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+
+  .essay-desc {
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #8a96aa;
+    line-height: 1.5;
+  }
+
+  .empty-state {
+    font-style: italic;
+    color: #8a96aa;
+    padding: 2rem 0;
+  }
+</style>
+
+<header class="essays-header">
+  <h1>{{ .Title }}</h1>
+  {{ with .Content }}<div class="essays-intro">{{ . }}</div>{{ end }}
+</header>
+
+{{ $essays := where .Site.RegularPages "Section" "essays" }}
+{{ if $essays }}
+<ul class="essay-list">
+  {{ range $essays }}
+  <li class="essay-item">
+    <div class="essay-date">{{ .Date.Format "January 2, 2006" }}</div>
+    <div class="essay-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></div>
+    {{ with .Params.description }}<div class="essay-desc">{{ . }}</div>{{ end }}
+  </li>
+  {{ end }}
+</ul>
+{{ else }}
+<p class="empty-state">No essays yet. Check back soon.</p>
+{{ end }}
+{{ end }}

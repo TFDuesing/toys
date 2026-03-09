@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ if not .IsHome }}{{ .Title }} | {{ end }}{{ .Site.Title }}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #2d3343;
+    padding: 10px;
+    font-family: Georgia, "Times New Roman", Times, serif;
+    color: #e8e4dc;
+  }
+
+  .page-shell {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+
+  .site-nav {
+    margin-bottom: 2.5rem;
+    font-size: 0.95rem;
+  }
+
+  .site-nav a {
+    color: #a8b4c8;
+    text-decoration: none;
+    font-style: italic;
+  }
+
+  .site-nav a:hover {
+    color: #e8e4dc;
+  }
+</style>
+</head>
+<body>
+<div class="page-shell">
+  <nav class="site-nav">
+    <a href="/">Thomas F. Duesing</a> / {{ block "breadcrumb" . }}{{ end }}
+  </nav>
+  {{ block "main" . }}{{ end }}
+</div>
+</body>
+</html>
