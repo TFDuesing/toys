@@ -500,7 +500,15 @@ function tempToPct(celsius) {
 // ─── API Calls ────────────────────────────────────────────────────────────────
 async function geocode(location) {
   // Split "City, State/Country" into city name + qualifiers for disambiguation
-  const inputParts = location.split(',').map(s => s.trim()).filter(Boolean);
+  let inputParts = location.split(',').map(s => s.trim()).filter(Boolean);
+  // Also handle "Washington DC" (no comma) — detect trailing 2–3 letter caps abbreviation
+  if (inputParts.length === 1) {
+    const tokens = inputParts[0].split(/\s+/);
+    const last = tokens[tokens.length - 1].replace(/\./g, '');
+    if (tokens.length > 1 && /^[A-Z]{2,3}$/.test(last)) {
+      inputParts = [tokens.slice(0, -1).join(' '), last];
+    }
+  }
   const cityName = inputParts[0].replace(/\./g, '').trim(); // strip dots (e.g. "D.C." → "DC")
   const qualifiers = inputParts.slice(1);
   const count = qualifiers.length > 0 ? 5 : 1;
