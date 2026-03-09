@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toys</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f5f5f0;
+      color: #222;
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    header {
+      max-width: 640px;
+      margin: 0 auto 2.5rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 0.4rem;
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    ul {
+      list-style: none;
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    li a {
+      display: block;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    li a:hover {
+      border-color: #999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+
+    .app-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #1a6fb5;
+    }
+
+    .app-desc {
+      margin-top: 0.25rem;
+      font-size: 0.88rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Toys</h1>
+    <p>A collection of small web apps.</p>
+  </header>
+  <ul>
+    <li>
+      <a href="pickleball.html">
+        <div class="app-name">Pickleball Scorekeeper</div>
+        <div class="app-desc">Keep score for singles or doubles pickleball games with serve tracking and undo support.</div>
+      </a>
+    </li>
+    <li>
+      <a href="weather-wardrobe.html">
+        <div class="app-name">What to Wear</div>
+        <div class="app-desc">Travel clothing advisor that fetches real weather forecasts and suggests what to pack.</div>
+      </a>
+    </li>
+  </ul>
+</body>
+</html>
