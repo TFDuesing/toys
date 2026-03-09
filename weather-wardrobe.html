@@ -467,12 +467,33 @@ function tempToPct(celsius) {
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 async function geocode(location) {
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`;
+  // Split "City, State/Country" into city name + qualifiers for disambiguation
+  const inputParts = location.split(',').map(s => s.trim()).filter(Boolean);
+  const cityName = inputParts[0].replace(/\./g, '').trim(); // strip dots (e.g. "D.C." → "DC")
+  const qualifiers = inputParts.slice(1);
+  const count = qualifiers.length > 0 ? 5 : 1;
+
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=${count}&language=en&format=json`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Geocoding request failed');
   const data = await res.json();
   if (!data.results || data.results.length === 0) throw new Error('Location not found');
-  const r = data.results[0];
+
+  let best = data.results[0];
+  if (qualifiers.length > 0) {
+    let bestScore = -1;
+    for (const r of data.results) {
+      const haystack = [r.admin1, r.admin2, r.admin3, r.country, r.country_code]
+        .filter(Boolean).join(' ').toLowerCase();
+      const score = qualifiers.reduce((n, q) => {
+        const norm = q.toLowerCase().replace(/\./g, '');
+        return n + (haystack.includes(norm) ? 1 : 0);
+      }, 0);
+      if (score > bestScore) { bestScore = score; best = r; }
+    }
+  }
+
+  const r = best;
   const parts = [r.name];
   if (r.admin1 && r.admin1 !== r.name) parts.push(r.admin1);
   if (r.country) parts.push(r.country);
