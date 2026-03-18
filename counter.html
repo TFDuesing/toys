@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Counter</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f5f5f0;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 3rem 3.5rem;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #555;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    #count {
+      font-size: 6rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin: 1.25rem 0 2rem;
+      min-height: 1em;
+      color: #111;
+    }
+
+    #count.loading {
+      color: #ccc;
+      font-size: 3rem;
+      padding-top: 1rem;
+    }
+
+    button {
+      background: #1a6fb5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      width: 100%;
+    }
+
+    button:hover:not(:disabled) {
+      background: #155fa0;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      color: #888;
+      min-height: 1.2em;
+    }
+
+    #status.error {
+      color: #c0392b;
+    }
+
+    .back {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #888;
+      text-decoration: none;
+    }
+
+    .back:hover { color: #444; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Global Counter</h1>
+    <div id="count" class="loading">…</div>
+    <button id="btn" disabled>+1</button>
+    <div id="status"></div>
+  </div>
+  <a class="back" href="index.html">← back</a>
+
+  <script>
+    // ─── Configuration ────────────────────────────────────────────────────────
+    // This app stores its counter in counter.json in this repo and reads/writes
+    // it via the GitHub Contents API. Reads are unauthenticated (public repo).
+    // Writes need a fine-grained Personal Access Token with only
+    // "Contents: Read and write" access scoped to this repository.
+    //
+    // To set up:
+    //   1. Go to GitHub → Settings → Developer settings → Fine-grained tokens
+    //   2. Create a token: Repository access = "TFDuesing/toys" only
+    //      Permissions: Contents → Read and write (nothing else)
+    //   3. Replace the placeholder below with your token.
+    //
+    // Risk: the token is visible in source. Worst case: someone spams the
+    // counter on this one repo. That's it.
+    const GITHUB_TOKEN = 'REPLACE_WITH_YOUR_FINE_GRAINED_PAT';
+
+    const OWNER  = 'TFDuesing';
+    const REPO   = 'toys';
+    const PATH   = 'counter.json';
+    const BRANCH = 'main';
+    const API    = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const countEl  = document.getElementById('count');
+    const btn      = document.getElementById('btn');
+    const statusEl = document.getElementById('status');
+
+    let currentSha = null;
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className   = isError ? 'error' : '';
+    }
+
+    async function fetchCounter() {
+      countEl.className = 'loading';
+      countEl.textContent = '…';
+      btn.disabled = true;
+      setStatus('');
+
+      try {
+        const res = await fetch(`${API}?ref=${BRANCH}`, {
+          headers: { Accept: 'application/vnd.github+json' }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const json = JSON.parse(atob(data.content));
+        currentSha = data.sha;
+        countEl.textContent = json.count.toLocaleString();
+        countEl.className = '';
+        if (GITHUB_TOKEN !== 'REPLACE_WITH_YOUR_FINE_GRAINED_PAT') {
+          btn.disabled = false;
+        } else {
+          setStatus('Token not configured — counter is read-only.', true);
+        }
+      } catch (err) {
+        setStatus(`Failed to load counter: ${err.message}`, true);
+        countEl.textContent = '?';
+        countEl.className = '';
+      }
+    }
+
+    async function increment() {
+      if (!currentSha) return;
+      btn.disabled = true;
+      setStatus('Saving…');
+
+      const newCount = parseInt(countEl.textContent.replace(/,/g, ''), 10) + 1;
+      const newContent = btoa(JSON.stringify({ count: newCount }) + '\n');
+
+      try {
+        const res = await fetch(API, {
+          method: 'PUT',
+          headers: {
+            Accept: 'application/vnd.github+json',
+            Authorization: `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Increment counter to ${newCount}`,
+            content: newContent,
+            sha:     currentSha,
+            branch:  BRANCH
+          })
+        });
+
+        if (res.status === 409) {
+          // Conflict — someone else incremented at the same time; re-fetch
+          setStatus('Conflict — reloading latest count…');
+          await fetchCounter();
+          return;
+        }
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        currentSha = data.content.sha;
+        countEl.textContent = newCount.toLocaleString();
+        setStatus('');
+        btn.disabled = false;
+      } catch (err) {
+        setStatus(`Error: ${err.message}`, true);
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener('click', increment);
+    fetchCounter();
+  </script>
+</body>
+</html>
