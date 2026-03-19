@@ -1,0 +1,8 @@
+name = "counter-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding      = "DB"
+database_name = "counter-db"
+database_id  = "REPLACE_WITH_YOUR_DATABASE_ID"
