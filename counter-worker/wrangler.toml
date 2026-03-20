@@ -5,4 +5,4 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding      = "DB"
 database_name = "counter-db"
-database_id  = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id  = "4ba3b628-1037-4021-85f7-64b8bd2d9bbc"
