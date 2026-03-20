@@ -117,11 +117,46 @@
     const btn      = document.getElementById('btn');
     const statusEl = document.getElementById('status');
 
+    let pollTimer = null;
+    let lastCount = null;
+
     function setStatus(msg, isError = false) {
       statusEl.textContent = msg;
       statusEl.className   = isError ? 'error' : '';
     }
 
+    // ─── Polling ───────────────────────────────────────────────────────────────
+    function startPolling() {
+      stopPolling();
+      pollTimer = setInterval(pollCounter, 5000);
+    }
+
+    function stopPolling() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+
+    async function pollCounter() {
+      try {
+        const res = await fetch(WORKER_URL);
+        if (!res.ok) return;
+        const { count } = await res.json();
+        if (count !== lastCount) {
+          countEl.textContent = count.toLocaleString();
+          lastCount = count;
+        }
+      } catch {} // silent — next poll will retry
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        pollCounter();
+        startPolling();
+      }
+    });
+
+    // ─── Core ──────────────────────────────────────────────────────────────────
     async function fetchCounter() {
       countEl.className   = 'loading';
       countEl.textContent = '…';
@@ -134,8 +169,10 @@
         const { count } = await res.json();
         countEl.textContent = count.toLocaleString();
         countEl.className   = '';
+        lastCount = count;
         btn.disabled = (WORKER_URL === 'REPLACE_WITH_YOUR_WORKER_URL');
         if (btn.disabled) setStatus('Worker URL not configured.', true);
+        else startPolling();
       } catch (err) {
         setStatus(`Failed to load counter: ${err.message}`, true);
         countEl.textContent = '?';
@@ -145,6 +182,7 @@
 
     async function increment() {
       btn.disabled = true;
+      stopPolling();
       setStatus('Saving…');
 
       try {
@@ -152,12 +190,14 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { count } = await res.json();
         countEl.textContent = count.toLocaleString();
+        lastCount = count;
         setStatus('');
         btn.disabled = false;
       } catch (err) {
         setStatus(`Error: ${err.message}`, true);
         btn.disabled = false;
       }
+      startPolling();
     }
 
     btn.addEventListener('click', increment);
