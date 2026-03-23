@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snippets</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #faf8f5;
+      color: #2a2a2a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .demo-banner {
+      background: #f0c040;
+      color: #5a4400;
+      text-align: center;
+      padding: 0.45rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e0dbd4;
+      padding: 0.9rem 1.25rem;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #b5556e;
+      letter-spacing: -0.01em;
+    }
+
+    header h1 span {
+      font-weight: 400;
+      font-size: 0.85rem;
+      color: #999;
+      margin-left: 0.5rem;
+    }
+
+    .app {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .client-list {
+      width: 260px;
+      background: #fff;
+      border-right: 1px solid #e0dbd4;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .client-list button {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: none;
+      border-bottom: 1px solid #f0ece6;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.92rem;
+      color: #333;
+      transition: background 0.12s;
+    }
+
+    .client-list button:hover {
+      background: #fdf5ee;
+    }
+
+    .client-list button.active {
+      background: #fdf0e8;
+      border-left: 3px solid #b5556e;
+      font-weight: 600;
+    }
+
+    .client-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e8d5c4;
+      color: #8a6550;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+    }
+
+    .client-list button.active .client-avatar {
+      background: #b5556e;
+      color: #fff;
+    }
+
+    .notes-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .notes-header {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid #f0ece6;
+      background: #fefcfa;
+      flex-shrink: 0;
+    }
+
+    .notes-header h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #444;
+    }
+
+    .notes-header p {
+      font-size: 0.78rem;
+      color: #999;
+      margin-top: 0.15rem;
+    }
+
+    .notes-panel textarea {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 1rem 1.25rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #333;
+      background: #fefcfa;
+      resize: none;
+    }
+
+    .notes-panel textarea::placeholder {
+      color: #ccc;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #bbb;
+      font-size: 0.95rem;
+    }
+
+    .add-client-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-bottom: 1px solid #e0dbd4;
+      background: #fefcfa;
+      color: #b5556e;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .add-client-btn:hover {
+      background: #fdf0e8;
+    }
+
+    .notes-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+
+    .notes-actions button {
+      border: 1px solid #e0dbd4;
+      background: #fff;
+      color: #666;
+      font-family: inherit;
+      font-size: 0.78rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+
+    .notes-actions button:hover {
+      background: #f5f0eb;
+      color: #333;
+    }
+
+    .notes-actions .delete-btn:hover {
+      background: #fde8e8;
+      color: #c0392b;
+      border-color: #e6b3b3;
+    }
+
+    .notes-header .name-row {
+      display: flex;
+      align-items: center;
+    }
+
+    .notes-header .client-name-input {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #444;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 0.15rem 0.35rem;
+      margin: -0.15rem -0.35rem;
+      background: transparent;
+      font-family: inherit;
+      outline: none;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .notes-header .client-name-input:hover {
+      border-color: #e0dbd4;
+    }
+
+    .notes-header .client-name-input:focus {
+      border-color: #b5556e;
+      background: #fff;
+    }
+
+    /* Mobile: back button visible, list/notes toggle */
+    .back-btn {
+      display: none;
+      border: none;
+      background: transparent;
+      color: #b5556e;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      margin-right: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .app { flex-direction: column; }
+      .client-list {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e0dbd4;
+      }
+      .app.show-notes .client-list { display: none; }
+      .app:not(.show-notes) .notes-panel { display: none; }
+      .app.show-notes .back-btn { display: inline; }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-banner">DEMO — data stored in browser only</div>
+  <header>
+    <h1>Snippets <span>Client Notes</span></h1>
+  </header>
+  <div class="app" id="app">
+    <div class="client-list" id="clientList"></div>
+    <div class="notes-panel" id="notesPanel">
+      <div class="empty-state" id="emptyState">Select a client to view notes</div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_CLIENTS = [
+      {
+        id: "1",
+        name: "Maria Santos",
+        notes: "Prefers balayage highlights, warm caramel tones. Sensitive scalp — use sulfate-free developer only.\n\nLast visit: root touch-up + gloss (6N base, 8G ends). Likes to keep length past shoulders, no more than half an inch off.\n\nSchedules every 7 weeks. Prefers Saturday mornings."
+      },
+      {
+        id: "2",
+        name: "Jordan Ellis",
+        notes: "Textured crop, faded sides (#2 guard blended to #4). Cowlick at crown — always cut against the grain.\n\nUses matte clay for styling. Allergic to tea tree oil — avoid Paul Mitchell line.\n\nLikes to chat about basketball. Tips well, always pays cash."
+      },
+      {
+        id: "3",
+        name: "Priya Kapoor",
+        notes: "Long layers with face-framing pieces. Very thick, coarse hair — needs thinning shears on the ends.\n\nDoes henna at home between visits (avoid bleach overlap). Likes a blowout with a round brush, lots of volume at the roots.\n\nComes in every 10–12 weeks. Brings chai sometimes!"
+      },
+      {
+        id: "4",
+        name: "Deshawn Mitchell",
+        notes: "High top fade, line-up every 3 weeks. Beard trim — keep it neat, rounded at the jawline.\n\nUses Cantu leave-in conditioner. Scalp tends to get dry in winter — recommend tea tree shampoo (not the Paul Mitchell, the generic).\n\nAlways books the last slot on Fridays."
+      },
+      {
+        id: "5",
+        name: "Sophie Brennan",
+        notes: "Pixie cut, keeps it very short on the sides. Currently platinum blonde — touch up every 5 weeks (30 vol developer, Wella T18 toner).\n\nSensitive ears — be careful with the clippers around the nape.\n\nBrings her daughter sometimes (age ~4, just wants a trim)."
+      },
+      {
+        id: "6",
+        name: "Carlos Reyes",
+        notes: "Classic taper, medium length on top. Slicks it back with pomade — likes a bit of shine.\n\nGray blending every other visit (just the temples). Has a scar behind the left ear — work around it gently.\n\nReferred by Maria Santos. Prefers appointments before noon."
+      },
+      {
+        id: "7",
+        name: "Aisha Johnson",
+        notes: "Protective styles — usually box braids or twists. Came in last time for a silk press.\n\nEdges are delicate — don't pull too tight around the hairline. Uses Olaplex at home.\n\nWants to try a copper rinse next visit. Send her a swatch photo before she comes in."
+      },
+      {
+        id: "8",
+        name: "Liam Kowalski",
+        notes: "Shoulder-length wavy hair, just wants a clean-up every 8 weeks. No layers — one length, blunt cut.\n\nDoesn't like product. Air dries only. Split ends tend to get bad — recommend a trim every 6 weeks instead.\n\nVery quiet, prefers no small talk. Reads on his phone during the cut."
+      }
+    ];
+
+    const STORAGE_KEY = "snippets_clients";
+
+    function loadClients() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try { return JSON.parse(stored); } catch(e) { /* fall through */ }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CLIENTS));
+      return DEFAULT_CLIENTS;
+    }
+
+    function saveClients(clients) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+    }
+
+    let clients = loadClients();
+    let selectedId = null;
+    let saveTimeout = null;
+
+    const app = document.getElementById("app");
+    const clientList = document.getElementById("clientList");
+    const notesPanel = document.getElementById("notesPanel");
+
+    function getInitials(name) {
+      return name.split(" ").map(w => w[0]).join("").toUpperCase();
+    }
+
+    let nextId = Math.max(...clients.map(c => parseInt(c.id))) + 1;
+
+    function renderClientList() {
+      clientList.innerHTML = "";
+
+      const addBtn = document.createElement("button");
+      addBtn.className = "add-client-btn";
+      addBtn.textContent = "+ Add Client";
+      addBtn.onclick = addClient;
+      clientList.appendChild(addBtn);
+
+      clients.forEach(c => {
+        const btn = document.createElement("button");
+        btn.className = c.id === selectedId ? "active" : "";
+        btn.innerHTML = `<div class="client-avatar">${getInitials(c.name)}</div><span>${c.name}</span>`;
+        btn.onclick = () => selectClient(c.id);
+        clientList.appendChild(btn);
+      });
+    }
+
+    function addClient() {
+      const newClient = { id: String(nextId++), name: "New Client", notes: "" };
+      clients.unshift(newClient);
+      saveClients(clients);
+      selectClient(newClient.id);
+    }
+
+    function deleteClient(id) {
+      if (!confirm("Delete this client and all their notes?")) return;
+      clients = clients.filter(c => c.id !== id);
+      saveClients(clients);
+      selectedId = null;
+      app.classList.remove("show-notes");
+      renderClientList();
+      renderEmpty();
+    }
+
+    function selectClient(id) {
+      selectedId = id;
+      const client = clients.find(c => c.id === id);
+      renderClientList();
+
+      notesPanel.innerHTML = "";
+
+      const header = document.createElement("div");
+      header.className = "notes-header";
+
+      const nameRow = document.createElement("div");
+      nameRow.className = "name-row";
+
+      const backBtn = document.createElement("button");
+      backBtn.className = "back-btn";
+      backBtn.textContent = "\u2190 Back";
+      backBtn.onclick = () => { selectedId = null; app.classList.remove("show-notes"); renderClientList(); renderEmpty(); };
+
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "client-name-input";
+      nameInput.value = client.name;
+      nameInput.oninput = () => {
+        client.name = nameInput.value;
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => { saveClients(clients); renderClientList(); }, 400);
+      };
+
+      const actions = document.createElement("div");
+      actions.className = "notes-actions";
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "delete-btn";
+      delBtn.textContent = "Delete";
+      delBtn.onclick = () => deleteClient(id);
+      actions.appendChild(delBtn);
+
+      nameRow.appendChild(backBtn);
+      nameRow.appendChild(nameInput);
+      nameRow.appendChild(actions);
+
+      const p = document.createElement("p");
+      p.textContent = "Click name to edit \u00b7 notes auto-save";
+
+      header.appendChild(nameRow);
+      header.appendChild(p);
+      notesPanel.appendChild(header);
+
+      const textarea = document.createElement("textarea");
+      textarea.value = client.notes;
+      textarea.placeholder = "Add notes about this client\u2026";
+      textarea.oninput = () => {
+        client.notes = textarea.value;
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => saveClients(clients), 400);
+      };
+      notesPanel.appendChild(textarea);
+
+      app.classList.add("show-notes");
+
+      if (client.name === "New Client") {
+        nameInput.select();
+      }
+    }
+
+    function renderEmpty() {
+      notesPanel.innerHTML = '<div class="empty-state">Select a client to view notes</div>';
+    }
+
+    renderClientList();
+  </script>
+</body>
+</html>
