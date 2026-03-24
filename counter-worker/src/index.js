@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers';
 
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
+  'https://toys.tfduesing.net',
   'https://tfduesing.github.io',
   'http://localhost',
   'http://127.0.0.1',
