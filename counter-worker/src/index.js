@@ -159,6 +159,12 @@ export default {
       return new Response(null, { headers: corsHeaders(origin) });
     }
 
+    // Reject WebSocket upgrades from unauthorized origins
+    const upgrade = request.headers.get('Upgrade');
+    if (upgrade === 'websocket' && origin && !ALLOWED_ORIGINS.includes(origin)) {
+      return new Response('Forbidden origin', { status: 403 });
+    }
+
     // Route everything to the singleton Counter DO
     const id = env.COUNTER.idFromName('global');
     const stub = env.COUNTER.get(id);
