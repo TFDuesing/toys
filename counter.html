@@ -117,7 +117,8 @@
     const btn      = document.getElementById('btn');
     const statusEl = document.getElementById('status');
 
-    let pollTimer = null;
+    let ws = null;
+    let reconnectDelay = 1000;
     let lastCount = null;
 
     function setStatus(msg, isError = false) {
@@ -125,36 +126,47 @@
       statusEl.className   = isError ? 'error' : '';
     }
 
-    // ─── Polling ───────────────────────────────────────────────────────────────
-    function startPolling() {
-      stopPolling();
-      pollTimer = setInterval(pollCounter, 5000);
+    function updateCount(count) {
+      if (count === lastCount) return;
+      lastCount = count;
+      countEl.textContent = count.toLocaleString();
+      countEl.className   = '';
     }
 
-    function stopPolling() {
-      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    // ─── WebSocket ─────────────────────────────────────────────────────────────
+    function connectWebSocket() {
+      const wsUrl = WORKER_URL.replace(/^http/, 'ws');
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        reconnectDelay = 1000;
+        btn.disabled = false;
+        setStatus('');
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const { count } = JSON.parse(e.data);
+          updateCount(count);
+        } catch {}
+      };
+
+      ws.onclose = () => {
+        ws = null;
+        scheduleReconnect();
+      };
+
+      ws.onerror = () => {
+        // onclose will fire after this
+      };
     }
 
-    async function pollCounter() {
-      try {
-        const res = await fetch(WORKER_URL);
-        if (!res.ok) return;
-        const { count } = await res.json();
-        if (count !== lastCount) {
-          countEl.textContent = count.toLocaleString();
-          lastCount = count;
-        }
-      } catch {} // silent — next poll will retry
+    function scheduleReconnect() {
+      setTimeout(() => {
+        reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+        connectWebSocket();
+      }, reconnectDelay);
     }
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        stopPolling();
-      } else {
-        pollCounter();
-        startPolling();
-      }
-    });
 
     // ─── Core ──────────────────────────────────────────────────────────────────
     async function fetchCounter() {
@@ -167,12 +179,13 @@
         const res = await fetch(WORKER_URL);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { count } = await res.json();
-        countEl.textContent = count.toLocaleString();
-        countEl.className   = '';
-        lastCount = count;
-        btn.disabled = (WORKER_URL === 'REPLACE_WITH_YOUR_WORKER_URL');
-        if (btn.disabled) setStatus('Worker URL not configured.', true);
-        else startPolling();
+        updateCount(count);
+        if (WORKER_URL === 'REPLACE_WITH_YOUR_WORKER_URL') {
+          btn.disabled = true;
+          setStatus('Worker URL not configured.', true);
+        } else {
+          connectWebSocket();
+        }
       } catch (err) {
         setStatus(`Failed to load counter: ${err.message}`, true);
         countEl.textContent = '?';
@@ -181,23 +194,24 @@
     }
 
     async function increment() {
-      btn.disabled = true;
-      stopPolling();
-      setStatus('Saving…');
-
-      try {
-        const res = await fetch(WORKER_URL, { method: 'POST' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const { count } = await res.json();
-        countEl.textContent = count.toLocaleString();
-        lastCount = count;
-        setStatus('');
-        btn.disabled = false;
-      } catch (err) {
-        setStatus(`Error: ${err.message}`, true);
-        btn.disabled = false;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('increment');
+      } else {
+        // Fallback to HTTP if WebSocket is not connected
+        btn.disabled = true;
+        setStatus('Saving…');
+        try {
+          const res = await fetch(WORKER_URL, { method: 'POST' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const { count } = await res.json();
+          updateCount(count);
+          setStatus('');
+          btn.disabled = false;
+        } catch (err) {
+          setStatus(`Error: ${err.message}`, true);
+          btn.disabled = false;
+        }
       }
-      startPolling();
     }
 
     btn.addEventListener('click', increment);

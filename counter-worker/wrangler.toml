@@ -1,8 +1,17 @@
 name = "counter-worker"
 main = "src/index.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-01-01"
 
 [[d1_databases]]
 binding      = "DB"
 database_name = "counter-db"
 database_id  = "4ba3b628-1037-4021-85f7-64b8bd2d9bbc"
+
+[durable_objects]
+bindings = [
+  { name = "COUNTER", class_name = "Counter" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Counter"]
