@@ -148,8 +148,10 @@
       ws.onmessage = (e) => {
         try {
           const { count } = JSON.parse(e.data);
-          updateCount(count);
-        } catch {}
+          if (count !== undefined) updateCount(count);
+        } catch (err) {
+          console.warn('WebSocket message parse error:', err.message);
+        }
       };
 
       ws.onclose = () => {
