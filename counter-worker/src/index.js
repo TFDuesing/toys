@@ -83,7 +83,7 @@ export class Counter extends DurableObject {
     // Broadcast to all connected WebSockets
     const msg = JSON.stringify({ count });
     for (const ws of this.ctx.getWebSockets()) {
-      try { ws.send(msg); } catch {}
+      try { ws.send(msg); } catch (err) { console.error('WebSocket broadcast failed:', err.message); }
     }
 
     // Sync back to D1 in the background with retry
