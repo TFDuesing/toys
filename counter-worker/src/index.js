@@ -39,8 +39,8 @@ export class Counter extends DurableObject {
       'CREATE TABLE IF NOT EXISTS counter (id INTEGER PRIMARY KEY CHECK (id = 1), value INTEGER NOT NULL DEFAULT 0)'
     );
     // Seed from D1 on first ever access
-    const row = this.ctx.storage.sql.exec('SELECT value FROM counter WHERE id = 1').one();
-    if (!row) {
+    const rows = this.ctx.storage.sql.exec('SELECT value FROM counter WHERE id = 1').toArray();
+    if (rows.length === 0) {
       const d1Row = await this.env.DB.prepare('SELECT value FROM counter WHERE id = 1').first();
       const initial = d1Row?.value ?? 0;
       this.ctx.storage.sql.exec('INSERT INTO counter (id, value) VALUES (1, ?)', initial);
