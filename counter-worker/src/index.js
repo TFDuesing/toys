@@ -86,10 +86,24 @@ export class Counter extends DurableObject {
       try { ws.send(msg); } catch {}
     }
 
-    // Sync back to D1 in the background (best-effort)
+    // Sync back to D1 in the background with retry
     this.ctx.waitUntil(
-      this.env.DB.prepare('UPDATE counter SET value = ? WHERE id = 1').bind(count).run()
+      this.syncToD1(count)
     );
+  }
+
+  async syncToD1(count, retries = 2) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        await this.env.DB.prepare('UPDATE counter SET value = ? WHERE id = 1').bind(count).run();
+        return;
+      } catch (err) {
+        console.error(`D1 sync failed (attempt ${attempt + 1}/${retries + 1}):`, err.message);
+        if (attempt < retries) {
+          await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
+        }
+      }
+    }
 
     return count;
   }
