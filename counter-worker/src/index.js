@@ -24,12 +24,36 @@ function json(data, status = 200, origin = '') {
   });
 }
 
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
+const RATE_LIMIT_MAX = 10;       // max increments per window
+const RATE_LIMIT_WINDOW_MS = 1000; // 1-second sliding window
+
 // ─── Counter Durable Object ────────────────────────────────────────────────────
 export class Counter extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
     this.env = env;
     this.initialized = false;
+    this.rateLimitMap = new Map(); // ip -> [timestamps]
+  }
+
+  isRateLimited(ip) {
+    const now = Date.now();
+    const key = ip || 'unknown';
+    let timestamps = this.rateLimitMap.get(key);
+    if (!timestamps) {
+      timestamps = [];
+      this.rateLimitMap.set(key, timestamps);
+    }
+    // Prune old entries
+    while (timestamps.length > 0 && timestamps[0] <= now - RATE_LIMIT_WINDOW_MS) {
+      timestamps.shift();
+    }
+    if (timestamps.length >= RATE_LIMIT_MAX) {
+      return true;
+    }
+    timestamps.push(now);
+    return false;
   }
 
   async initialize() {
@@ -80,7 +104,8 @@ export class Counter extends DurableObject {
     if (upgrade === 'websocket') {
       const pair = new WebSocketPair();
       const [client, server] = Object.values(pair);
-      this.ctx.acceptWebSocket(server);
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      this.ctx.acceptWebSocket(server, [ip]);
       // Send current count immediately on connect
       server.send(JSON.stringify({ count: this.getCount() }));
       return new Response(null, { status: 101, webSocket: client });
@@ -93,6 +118,10 @@ export class Counter extends DurableObject {
 
     // HTTP POST — increment
     if (request.method === 'POST') {
+      const ip = request.headers.get('CF-Connecting-IP');
+      if (this.isRateLimited(ip)) {
+        return json({ error: 'Rate limit exceeded' }, 429);
+      }
       const count = await this.incrementAndBroadcast();
       return json({ count });
     }
@@ -104,6 +133,12 @@ export class Counter extends DurableObject {
   async webSocketMessage(ws, message) {
     await this.initialize();
     if (message === 'increment') {
+      const tags = this.ctx.getTags(ws);
+      const ip = tags[0] || 'unknown';
+      if (this.isRateLimited(ip)) {
+        ws.send(JSON.stringify({ error: 'Rate limit exceeded' }));
+        return;
+      }
       await this.incrementAndBroadcast();
     }
   }
