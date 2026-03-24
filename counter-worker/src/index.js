@@ -4,8 +4,6 @@ import { DurableObject } from 'cloudflare:workers';
 const ALLOWED_ORIGINS = [
   'https://toys.tfduesing.net',
   'https://tfduesing.github.io',
-  'http://localhost',
-  'http://127.0.0.1',
 ];
 
 function corsHeaders(origin) {
