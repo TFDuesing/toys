@@ -352,7 +352,7 @@
       return name.split(" ").map(w => w[0]).join("").toUpperCase();
     }
 
-    let nextId = Math.max(...clients.map(c => parseInt(c.id))) + 1;
+    let nextId = Math.max(0, ...clients.map(c => parseInt(c.id))) + 1;
 
     function renderClientList() {
       clientList.innerHTML = "";
