@@ -184,33 +184,26 @@
       background: #fdf0e8;
     }
 
-    .notes-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-left: auto;
+    .delete-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #f0ece6;
+      background: #fefcfa;
+      flex-shrink: 0;
     }
 
-    .notes-actions button {
-      border: 1px solid #e0dbd4;
-      background: #fff;
-      color: #666;
+    .delete-footer .delete-btn {
+      border: none;
+      background: transparent;
+      color: #999;
       font-family: inherit;
       font-size: 0.78rem;
-      padding: 0.3rem 0.6rem;
-      border-radius: 4px;
+      padding: 0.3rem 0;
       cursor: pointer;
-      transition: background 0.12s, color 0.12s;
+      transition: color 0.12s;
     }
 
-    .notes-actions button:hover {
-      background: #f5f0eb;
-      color: #333;
-    }
-
-    .notes-actions .delete-btn:hover {
-      background: #fde8e8;
+    .delete-footer .delete-btn:hover {
       color: #c0392b;
-      border-color: #e6b3b3;
     }
 
     .notes-header .name-row {
@@ -417,18 +410,8 @@
         saveTimeout = setTimeout(() => { saveClients(clients); renderClientList(); }, 400);
       };
 
-      const actions = document.createElement("div");
-      actions.className = "notes-actions";
-
-      const delBtn = document.createElement("button");
-      delBtn.className = "delete-btn";
-      delBtn.textContent = "Delete";
-      delBtn.onclick = () => deleteClient(id);
-      actions.appendChild(delBtn);
-
       nameRow.appendChild(backBtn);
       nameRow.appendChild(nameInput);
-      nameRow.appendChild(actions);
 
       const p = document.createElement("p");
       p.textContent = "Click name to edit \u00b7 notes auto-save";
@@ -446,6 +429,15 @@
         saveTimeout = setTimeout(() => saveClients(clients), 400);
       };
       notesPanel.appendChild(textarea);
+
+      const deleteFooter = document.createElement("div");
+      deleteFooter.className = "delete-footer";
+      const delBtn = document.createElement("button");
+      delBtn.className = "delete-btn";
+      delBtn.textContent = "Delete client";
+      delBtn.onclick = () => deleteClient(id);
+      deleteFooter.appendChild(delBtn);
+      notesPanel.appendChild(deleteFooter);
 
       app.classList.add("show-notes");
 
