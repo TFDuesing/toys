@@ -111,8 +111,61 @@
       animation: wiggle 0.4s ease-in-out;
     }
 
-    .back {
+    .stats {
+      max-width: 800px;
+      width: 100%;
       margin-top: 2rem;
+    }
+
+    .stats summary {
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.45);
+      text-align: center;
+      list-style: none;
+      user-select: none;
+    }
+
+    .stats summary::-webkit-details-marker { display: none; }
+
+    .stats[open] summary { margin-bottom: 0.75rem; }
+
+    .stats-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .stats-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.35rem 0.75rem;
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .stats-rank {
+      width: 1.5em;
+      text-align: right;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.75rem;
+    }
+
+    .stats-icon { font-size: 1.1rem; }
+
+    .stats-name { flex: 1; }
+
+    .stats-count {
+      font-variant-numeric: tabular-nums;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .back {
+      margin-top: 1.5rem;
       font-size: 0.85rem;
       color: rgba(255,255,255,0.7);
       text-decoration: none;
@@ -125,6 +178,10 @@
   <h1>Silly Soundboard</h1>
   <p class="subtitle">Tap a tile to make some noise</p>
   <div class="grid" id="grid"></div>
+  <details class="stats" id="stats">
+    <summary>Play counts</summary>
+    <ul class="stats-list" id="stats-list"></ul>
+  </details>
   <a class="back" href="index.html">&larr; back</a>
 
   <script>
@@ -1269,6 +1326,30 @@
       { icon: '\uD83C\uDF00', label: 'Portal Open',      fn: portalOpen,     ms: 800  },
     ];
 
+    // ─── Play Counts ─────────────────────────────────────────────────────────
+    const STORAGE_KEY = 'soundboard-plays';
+    let playCounts = {};
+    try { playCounts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch {}
+
+    function recordPlay(label) {
+      playCounts[label] = (playCounts[label] || 0) + 1;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(playCounts));
+      renderStats();
+    }
+
+    const statsList = document.getElementById('stats-list');
+
+    function renderStats() {
+      const ranked = sounds
+        .map(s => ({ icon: s.icon, label: s.label, count: playCounts[s.label] || 0 }))
+        .filter(s => s.count > 0)
+        .sort((a, b) => b.count - a.count);
+      statsList.innerHTML = ranked.map((s, i) =>
+        `<li class="stats-row"><span class="stats-rank">${i + 1}</span><span class="stats-icon">${s.icon}</span><span class="stats-name">${s.label}</span><span class="stats-count">${s.count}</span></li>`
+      ).join('');
+    }
+
+    // ─── Build Grid ────────────────────────────────────────────────────────────
     const grid = document.getElementById('grid');
 
     sounds.forEach(({ icon, label, fn, ms }) => {
@@ -1278,11 +1359,14 @@
       btn.addEventListener('click', () => {
         const ctx = ensureAudioCtx();
         fn(ctx);
+        recordPlay(label);
         btn.classList.add('playing');
         setTimeout(() => btn.classList.remove('playing'), ms);
       });
       grid.appendChild(btn);
     });
+
+    renderStats();
   </script>
 </body>
 </html>
