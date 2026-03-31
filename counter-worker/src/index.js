@@ -3,11 +3,16 @@ import { DurableObject } from 'cloudflare:workers';
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
   'https://toys.tfduesing.net',
-  'https://tfduesing.github.io',
 ];
 
+function isAllowedOrigin(origin) {
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^https:\/\/[a-z0-9-]+\.toys-bm4\.pages\.dev$/.test(origin)) return true;
+  return false;
+}
+
 function corsHeaders(origin) {
-  if (!ALLOWED_ORIGINS.includes(origin)) return {};
+  if (!isAllowedOrigin(origin)) return {};
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -175,7 +180,7 @@ export default {
 
     // Reject WebSocket upgrades from unauthorized origins
     const upgrade = request.headers.get('Upgrade');
-    if (upgrade === 'websocket' && origin && !ALLOWED_ORIGINS.includes(origin)) {
+    if (upgrade === 'websocket' && origin && !isAllowedOrigin(origin)) {
       return new Response('Forbidden origin', { status: 403 });
     }
 
