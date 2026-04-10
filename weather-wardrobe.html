@@ -971,13 +971,15 @@ let closeLocationAutocomplete = () => {};  // exposed so handleSubmit can call i
       li.setAttribute('role', 'option');
       li.setAttribute('id', `autocomplete-item-${i}`);
       li.innerHTML = highlightMatch(formatResult(r), query);
-      li.addEventListener('mousedown', e => {
-        // mousedown fires before blur; prevent blur from closing list first
+      // mousedown fires before blur on desktop; touchstart fires before blur on mobile
+      function selectItem(e) {
         e.preventDefault();
         input.value = formatResult(r);
         closeSuggestions();
         clearError();
-      });
+      }
+      li.addEventListener('mousedown', selectItem);
+      li.addEventListener('touchstart', selectItem, { passive: false });
       list.appendChild(li);
     });
     list.classList.remove('hidden');
