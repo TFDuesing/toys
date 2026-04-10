@@ -946,6 +946,7 @@ async function handleSubmit() {
     items.forEach(el => el.classList.remove('active'));
     if (idx >= 0 && idx < items.length) {
       items[idx].classList.add('active');
+      items[idx].scrollIntoView({ block: 'nearest' });
     }
     activeIdx = idx;
   }
