@@ -76,6 +76,42 @@
       margin-bottom: 16px;
     }
 
+    .autocomplete-wrapper {
+      position: relative;
+    }
+
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      list-style: none;
+      margin: 0;
+      padding: 4px 0;
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .autocomplete-list.hidden { display: none; }
+
+    .autocomplete-item {
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.active {
+      background: var(--sky-light);
+      color: var(--sky-dark);
+    }
+
     label {
       font-size: 0.78rem;
       font-weight: 700;
@@ -378,7 +414,10 @@
 <div class="card" id="input-card">
   <div class="input-group">
     <label for="location">Where are you going?</label>
-    <input type="text" id="location" placeholder="e.g., Tokyo, Japan" autocomplete="off" />
+    <div class="autocomplete-wrapper">
+      <input type="text" id="location" placeholder="e.g., Tokyo, Japan" autocomplete="off" />
+      <ul class="autocomplete-list hidden" id="autocomplete-list"></ul>
+    </div>
   </div>
   <div class="date-row">
     <div class="input-group">
@@ -862,6 +901,95 @@ async function handleSubmit() {
   }
 }
 
+// ─── Autocomplete ─────────────────────────────────────────────────────────────
+(function setupAutocomplete() {
+  const input = document.getElementById('location');
+  const list  = document.getElementById('autocomplete-list');
+  let activeIdx = -1;
+  let debounceTimer = null;
+
+  function formatResult(r) {
+    const parts = [r.name];
+    if (r.admin1 && r.admin1 !== r.name) parts.push(r.admin1);
+    if (r.country) parts.push(r.country);
+    return parts.join(', ');
+  }
+
+  function closeSuggestions() {
+    list.innerHTML = '';
+    list.classList.add('hidden');
+    activeIdx = -1;
+  }
+
+  function renderSuggestions(results) {
+    list.innerHTML = '';
+    if (!results || results.length === 0) { closeSuggestions(); return; }
+    results.forEach((r, i) => {
+      const li = document.createElement('li');
+      li.className = 'autocomplete-item';
+      li.textContent = formatResult(r);
+      li.addEventListener('mousedown', e => {
+        // mousedown fires before blur; prevent blur from closing list first
+        e.preventDefault();
+        input.value = li.textContent;
+        closeSuggestions();
+        clearError();
+      });
+      list.appendChild(li);
+    });
+    list.classList.remove('hidden');
+    activeIdx = -1;
+  }
+
+  function setActive(idx) {
+    const items = list.querySelectorAll('.autocomplete-item');
+    items.forEach(el => el.classList.remove('active'));
+    if (idx >= 0 && idx < items.length) {
+      items[idx].classList.add('active');
+    }
+    activeIdx = idx;
+  }
+
+  async function fetchAndRender(query) {
+    if (query.length < 2) { closeSuggestions(); return; }
+    try {
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`;
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      // Only update if input still matches (avoid stale renders)
+      if (input.value.trim() === query) renderSuggestions(data.results || []);
+    } catch {}
+  }
+
+  input.addEventListener('input', () => {
+    clearError();
+    clearTimeout(debounceTimer);
+    const q = input.value.trim();
+    debounceTimer = setTimeout(() => fetchAndRender(q), 250);
+  });
+
+  input.addEventListener('keydown', e => {
+    const items = list.querySelectorAll('.autocomplete-item');
+    if (list.classList.contains('hidden') || items.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActive(Math.min(activeIdx + 1, items.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive(Math.max(activeIdx - 1, 0));
+    } else if (e.key === 'Enter' && activeIdx >= 0) {
+      e.stopPropagation(); // prevent form submit
+      input.value = items[activeIdx].textContent;
+      closeSuggestions();
+    } else if (e.key === 'Escape') {
+      closeSuggestions();
+    }
+  });
+
+  input.addEventListener('blur', () => closeSuggestions());
+})();
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 (function init() {
   // Default dates: today → today + 7 days
@@ -871,12 +999,10 @@ async function handleSubmit() {
   document.getElementById('start-date').value = dateToStr(today);
   document.getElementById('end-date').value   = dateToStr(next7);
 
-  // Clear errors on input
-  document.getElementById('location').addEventListener('input', clearError);
   document.getElementById('start-date').addEventListener('change', clearError);
   document.getElementById('end-date').addEventListener('change', clearError);
 
-  // Enter key submits
+  // Enter key submits (only when autocomplete is not handling it)
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') handleSubmit();
   });
