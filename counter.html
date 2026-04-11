@@ -132,95 +132,6 @@
       return buf;
     }
 
-    // 1. Aoogah — old car horn
-    function aoogah(ctx) {
-      const t = ctx.currentTime;
-      const g = ctx.createGain();
-      const filt = ctx.createBiquadFilter();
-      filt.type = 'lowpass'; filt.frequency.value = 1200;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.25, t + 0.04);
-      g.gain.setValueAtTime(0.25, t + 0.3);
-      g.gain.linearRampToValueAtTime(0.08, t + 0.38);
-      g.gain.linearRampToValueAtTime(0.28, t + 0.45);
-      g.gain.setValueAtTime(0.28, t + 0.65);
-      g.gain.linearRampToValueAtTime(0, t + 0.85);
-      filt.connect(g).connect(ctx.destination);
-      for (const detune of [0, 7]) {
-        const o = ctx.createOscillator();
-        o.type = 'sawtooth';
-        o.detune.value = detune;
-        o.frequency.setValueAtTime(280, t);
-        o.frequency.exponentialRampToValueAtTime(380, t + 0.18);
-        o.frequency.exponentialRampToValueAtTime(260, t + 0.38);
-        o.frequency.exponentialRampToValueAtTime(400, t + 0.52);
-        o.frequency.exponentialRampToValueAtTime(230, t + 0.85);
-        o.connect(filt);
-        o.start(t); o.stop(t + 0.85);
-      }
-    }
-
-    // 2. Clown horn
-    function clownHorn(ctx) {
-      const t = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'square';
-      o.frequency.setValueAtTime(310, t);
-      o.frequency.linearRampToValueAtTime(280, t + 0.25);
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.22, t + 0.015);
-      g.gain.setValueAtTime(0.22, t + 0.15);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-      o.connect(g).connect(ctx.destination);
-      o.start(t); o.stop(t + 0.3);
-      // air puff
-      const ns = ctx.createBufferSource();
-      ns.buffer = makeNoise(ctx, 0.2);
-      const bp = ctx.createBiquadFilter();
-      bp.type = 'bandpass'; bp.frequency.value = 300; bp.Q.value = 5;
-      const ng = ctx.createGain();
-      ng.gain.setValueAtTime(0, t + 0.02);
-      ng.gain.linearRampToValueAtTime(0.12, t + 0.04);
-      ng.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-      ns.connect(bp).connect(ng).connect(ctx.destination);
-      ns.start(t + 0.02); ns.stop(t + 0.22);
-    }
-
-    // 3. Boing
-    function boing(ctx) {
-      const t = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(600, t);
-      o.frequency.exponentialRampToValueAtTime(200, t + 0.5);
-      // harmonic
-      const o2 = ctx.createOscillator();
-      const g2 = ctx.createGain();
-      o2.type = 'sine';
-      o2.frequency.setValueAtTime(1200, t);
-      o2.frequency.exponentialRampToValueAtTime(400, t + 0.5);
-      g2.gain.value = 0.06;
-      // vibrato LFO for spring wobble
-      const lfo = ctx.createOscillator();
-      const lfoG = ctx.createGain();
-      lfo.frequency.setValueAtTime(20, t);
-      lfo.frequency.linearRampToValueAtTime(8, t + 0.5);
-      lfoG.gain.setValueAtTime(60, t);
-      lfoG.gain.linearRampToValueAtTime(15, t + 0.5);
-      lfo.connect(lfoG);
-      lfoG.connect(o.frequency);
-      lfoG.connect(o2.frequency);
-      g.gain.setValueAtTime(0.25, t);
-      g.gain.linearRampToValueAtTime(0, t + 0.55);
-      o.connect(g).connect(ctx.destination);
-      o2.connect(g2).connect(ctx.destination);
-      lfo.start(t); o.start(t); o2.start(t);
-      lfo.stop(t + 0.55); o.stop(t + 0.55); o2.stop(t + 0.55);
-    }
-
-    // 4. Sad trombone — wah wah wah waaaah
     function sadTrombone(ctx) {
       const t = ctx.currentTime;
       const o = ctx.createOscillator();
@@ -240,7 +151,6 @@
           g.gain.linearRampToValueAtTime(0.05, nt + nd);
         }
       }
-      // last note: vibrato + long decay
       const lastStart = t + 3 * nd;
       const vib = ctx.createOscillator();
       const vibG = ctx.createGain();
@@ -253,177 +163,6 @@
       o.start(t); o.stop(lastStart + 0.6);
     }
 
-    // 5. Short toot (fart)
-    function fartToot(ctx) {
-      const t = ctx.currentTime;
-      const ns = ctx.createBufferSource();
-      ns.buffer = makeNoise(ctx, 0.25);
-      const bp = ctx.createBiquadFilter();
-      bp.type = 'bandpass'; bp.frequency.value = 250; bp.Q.value = 3;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.3, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-      ns.connect(bp).connect(g).connect(ctx.destination);
-      ns.start(t); ns.stop(t + 0.2);
-    }
-
-    // 6. Long rip (fart)
-    function fartRip(ctx) {
-      const t = ctx.currentTime;
-      const ns = ctx.createBufferSource();
-      ns.buffer = makeNoise(ctx, 0.6);
-      const bp = ctx.createBiquadFilter();
-      bp.type = 'bandpass'; bp.frequency.setValueAtTime(300, t);
-      bp.frequency.linearRampToValueAtTime(200, t + 0.5);
-      bp.Q.value = 3;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.3, t + 0.04);
-      g.gain.setValueAtTime(0.25, t + 0.35);
-      g.gain.linearRampToValueAtTime(0, t + 0.5);
-      ns.connect(bp).connect(g).connect(ctx.destination);
-      ns.start(t); ns.stop(t + 0.5);
-    }
-
-    // 7. Squeaker (fart)
-    function fartSqueaker(ctx) {
-      const t = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(400, t);
-      const lfo = ctx.createOscillator();
-      const lfoG = ctx.createGain();
-      lfo.frequency.value = 25; lfoG.gain.value = 80;
-      lfo.connect(lfoG).connect(o.frequency);
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.2, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-      o.connect(g).connect(ctx.destination);
-      lfo.start(t); o.start(t);
-      lfo.stop(t + 0.15); o.stop(t + 0.15);
-    }
-
-    // 8. Bubbler (fart)
-    function fartBubbler(ctx) {
-      const t = ctx.currentTime;
-      const ns = ctx.createBufferSource();
-      ns.buffer = makeNoise(ctx, 0.5);
-      const bp = ctx.createBiquadFilter();
-      bp.type = 'bandpass';
-      bp.frequency.setValueAtTime(220, t);
-      bp.frequency.linearRampToValueAtTime(190, t + 0.4);
-      bp.Q.value = 4;
-      const g = ctx.createGain();
-      // pulse the gain with a square LFO for bubbling
-      const lfo = ctx.createOscillator();
-      const lfoG = ctx.createGain();
-      lfo.type = 'square'; lfo.frequency.value = 12;
-      lfoG.gain.value = 0.15;
-      g.gain.setValueAtTime(0.15, t);
-      g.gain.linearRampToValueAtTime(0, t + 0.4);
-      lfo.connect(lfoG).connect(g.gain);
-      ns.connect(bp).connect(g).connect(ctx.destination);
-      lfo.start(t); ns.start(t);
-      lfo.stop(t + 0.4); ns.stop(t + 0.4);
-    }
-
-    // 9. Slide whistle up
-    function slideUp(ctx) {
-      const t = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(400, t);
-      o.frequency.exponentialRampToValueAtTime(1200, t + 0.35);
-      g.gain.setValueAtTime(0.2, t);
-      g.gain.setValueAtTime(0.2, t + 0.32);
-      g.gain.linearRampToValueAtTime(0, t + 0.4);
-      o.connect(g).connect(ctx.destination);
-      o.start(t); o.stop(t + 0.4);
-    }
-
-    // 10. Slide whistle down
-    function slideDown(ctx) {
-      const t = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(1200, t);
-      o.frequency.exponentialRampToValueAtTime(400, t + 0.35);
-      g.gain.setValueAtTime(0.2, t);
-      g.gain.setValueAtTime(0.2, t + 0.32);
-      g.gain.linearRampToValueAtTime(0, t + 0.4);
-      o.connect(g).connect(ctx.destination);
-      o.start(t); o.stop(t + 0.4);
-    }
-
-    // 11. Duck quack
-    function duckQuack(ctx) {
-      const t = ctx.currentTime;
-      const o = ctx.createOscillator();
-      const bp = ctx.createBiquadFilter();
-      const g = ctx.createGain();
-      o.type = 'square';
-      o.frequency.setValueAtTime(350, t);
-      o.frequency.linearRampToValueAtTime(450, t + 0.03);
-      o.frequency.linearRampToValueAtTime(340, t + 0.12);
-      bp.type = 'bandpass'; bp.frequency.value = 600; bp.Q.value = 3;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.22, t + 0.01);
-      g.gain.setValueAtTime(0.22, t + 0.08);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-      o.connect(bp).connect(g).connect(ctx.destination);
-      o.start(t); o.stop(t + 0.25);
-    }
-
-    // 12. Bicycle horn — beep beep
-    function bicycleHorn(ctx) {
-      const t = ctx.currentTime;
-      for (let i = 0; i < 2; i++) {
-        const offset = i * 0.18;
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'triangle';
-        o.frequency.value = 480;
-        g.gain.setValueAtTime(0, t + offset);
-        g.gain.linearRampToValueAtTime(0.22, t + offset + 0.01);
-        g.gain.setValueAtTime(0.22, t + offset + 0.08);
-        g.gain.linearRampToValueAtTime(0, t + offset + 0.12);
-        o.connect(g).connect(ctx.destination);
-        o.start(t + offset); o.stop(t + offset + 0.12);
-      }
-    }
-
-    // 13. Whoopee cushion
-    function whoopeeCushion(ctx) {
-      const t = ctx.currentTime;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.25, t + 0.1);
-      g.gain.setValueAtTime(0.2, t + 0.4);
-      g.gain.linearRampToValueAtTime(0, t + 0.7);
-      g.connect(ctx.destination);
-      // low layer
-      const n1 = ctx.createBufferSource();
-      n1.buffer = makeNoise(ctx, 0.8);
-      const bp1 = ctx.createBiquadFilter();
-      bp1.type = 'bandpass'; bp1.frequency.value = 200; bp1.Q.value = 1.5;
-      n1.connect(bp1).connect(g);
-      n1.start(t); n1.stop(t + 0.7);
-      // high wheeze layer
-      const n2 = ctx.createBufferSource();
-      n2.buffer = makeNoise(ctx, 0.8);
-      const bp2 = ctx.createBiquadFilter();
-      bp2.type = 'bandpass'; bp2.frequency.value = 400; bp2.Q.value = 2;
-      const g2 = ctx.createGain();
-      g2.gain.value = 0.5;
-      n2.connect(bp2).connect(g2).connect(g);
-      n2.start(t); n2.stop(t + 0.7);
-    }
-
-    // 14. Kazoo
     function kazoo(ctx) {
       const t = ctx.currentTime;
       const o = ctx.createOscillator();
@@ -443,11 +182,134 @@
       trem.stop(t + 0.3); o.stop(t + 0.3);
     }
 
+    function rubberChicken(ctx) {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(900, t);
+      o.frequency.exponentialRampToValueAtTime(300, t + 0.6);
+      const lfo = ctx.createOscillator();
+      const lfoG = ctx.createGain();
+      lfo.frequency.value = 35; lfoG.gain.value = 50;
+      lfo.connect(lfoG).connect(o.frequency);
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass'; filt.frequency.value = 800; filt.Q.value = 2;
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.setValueAtTime(0.18, t + 0.4);
+      g.gain.linearRampToValueAtTime(0, t + 0.6);
+      o.connect(filt).connect(g).connect(ctx.destination);
+      lfo.start(t); o.start(t);
+      lfo.stop(t + 0.6); o.stop(t + 0.6);
+    }
+
+    function recordScratch(ctx) {
+      const t = ctx.currentTime;
+      const ns = ctx.createBufferSource();
+      ns.buffer = makeNoise(ctx, 0.4);
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass'; filt.Q.value = 1;
+      filt.frequency.setValueAtTime(3000, t);
+      filt.frequency.exponentialRampToValueAtTime(300, t + 0.15);
+      filt.frequency.exponentialRampToValueAtTime(2000, t + 0.25);
+      filt.frequency.exponentialRampToValueAtTime(200, t + 0.35);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.3, t);
+      g.gain.setValueAtTime(0.25, t + 0.25);
+      g.gain.linearRampToValueAtTime(0, t + 0.35);
+      ns.connect(filt).connect(g).connect(ctx.destination);
+      ns.start(t); ns.stop(t + 0.35);
+    }
+
+    function airhorn(ctx) {
+      const t = ctx.currentTime;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.25, t + 0.03);
+      g.gain.setValueAtTime(0.25, t + 0.7);
+      g.gain.linearRampToValueAtTime(0, t + 0.8);
+      g.connect(ctx.destination);
+      for (const freq of [480, 540, 720]) {
+        const o = ctx.createOscillator();
+        o.type = 'square';
+        o.frequency.value = freq;
+        const og = ctx.createGain();
+        og.gain.value = 0.35;
+        o.connect(og).connect(g);
+        o.start(t); o.stop(t + 0.8);
+      }
+    }
+
+    function dialUp(ctx) {
+      const t = ctx.currentTime;
+      const g = ctx.createGain();
+      g.gain.value = 0.15;
+      g.connect(ctx.destination);
+      const freqs = [1070, 1270, 2250, 1800, 980, 1650, 2100, 1400];
+      freqs.forEach((f, i) => {
+        const o = ctx.createOscillator();
+        const eg = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        const start = i * 0.12;
+        eg.gain.setValueAtTime(0, t + start);
+        eg.gain.linearRampToValueAtTime(1, t + start + 0.01);
+        eg.gain.setValueAtTime(1, t + start + 0.1);
+        eg.gain.linearRampToValueAtTime(0, t + start + 0.12);
+        o.connect(eg).connect(g);
+        o.start(t + start); o.stop(t + start + 0.12);
+      });
+      const ns = ctx.createBufferSource();
+      ns.buffer = makeNoise(ctx, 0.3);
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.5;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0, t + 0.9);
+      ng.gain.linearRampToValueAtTime(0.6, t + 0.92);
+      ng.gain.setValueAtTime(0.6, t + 1.1);
+      ng.gain.linearRampToValueAtTime(0, t + 1.2);
+      ns.connect(bp).connect(ng).connect(g);
+      ns.start(t + 0.9); ns.stop(t + 1.2);
+    }
+
+    function coinCollect(ctx) {
+      const t = ctx.currentTime;
+      const notes = [
+        { f: 988, start: 0, dur: 0.08 },
+        { f: 1319, start: 0.08, dur: 0.3 },
+      ];
+      notes.forEach(({ f, start, dur }) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.18, t + start);
+        g.gain.setValueAtTime(0.18, t + start + dur - 0.05);
+        g.gain.linearRampToValueAtTime(0, t + start + dur);
+        o.connect(g).connect(ctx.destination);
+        o.start(t + start); o.stop(t + start + dur);
+      });
+    }
+
+    function eightBitDeath(ctx) {
+      const t = ctx.currentTime;
+      for (let i = 0; i < 10; i++) {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.value = 600 - i * 45;
+        const start = i * 0.08;
+        g.gain.setValueAtTime(0.14, t + start);
+        g.gain.setValueAtTime(0.14, t + start + 0.06);
+        g.gain.linearRampToValueAtTime(0, t + start + 0.08);
+        o.connect(g).connect(ctx.destination);
+        o.start(t + start); o.stop(t + start + 0.08);
+      }
+    }
+
     const sillySounds = [
-      aoogah, clownHorn, boing, sadTrombone,
-      fartToot, fartRip, fartSqueaker, fartBubbler,
-      slideUp, slideDown, duckQuack,
-      bicycleHorn, whoopeeCushion, kazoo
+      sadTrombone, kazoo, rubberChicken, recordScratch,
+      airhorn, dialUp, coinCollect, eightBitDeath,
     ];
 
     function playSillySound() {
