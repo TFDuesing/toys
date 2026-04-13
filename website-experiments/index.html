@@ -8,14 +8,14 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    min-height: 100vh;
+    min-height: 100dvh;
     background: #2d3343;
     padding: 10px;
     font-family: Georgia, "Times New Roman", Times, serif;
   }
 
   main {
-    min-height: calc(100vh - 20px);
+    min-height: calc(100dvh - 20px);
     background: url("clouds.jpeg") center / cover no-repeat;
     border-radius: 6px;
     display: flex;
@@ -31,6 +31,7 @@
     font-size: clamp(2.5rem, 7vw, 4.5rem);
     font-weight: bold;
     letter-spacing: 0.01em;
+    text-wrap: balance;
   }
 
   hr {
