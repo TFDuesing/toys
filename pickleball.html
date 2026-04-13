@@ -9,30 +9,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; user-select: none; }
 
     :root {
-      --gold: #c4973a;       /* amber — used only on dark card2 bg */
+      --gold: #c4973a;
       --gold-dark: #a87d2e;
-      --gold-btn: #b8870a;   /* darker amber for light-bg active badges */
-      --sage: #2e6147;       /* deep sage — white text on top */
+      --gold-btn: #b8870a;
+      --sage: #2e6147;
       --sage-dark: #1f4f38;
       --red: #8b2e1a;
-      --bg: #f4efe3;         /* warm limestone cream */
-      --card: #ece6d4;       /* slightly deeper cream */
-      --card2: #172436;      /* deep lake navy — high-contrast callout */
-      --text: #1c1a10;       /* very dark charcoal */
-      --muted: #6a5e4c;      /* warm medium brown-gray */
-      --border: #c8bea0;     /* warm stone border */
-      --border2: #263d54;    /* navy border for card2 */
+      --bg: #f4efe3;
+      --card: #ece6d4;
+      --card2: #172436;
+      --text: #1c1a10;
+      --muted: #6a5e4c;
+      --border: #c8bea0;
+      --border2: #263d54;
       --radius: 12px;
+      accent-color: var(--sage);
     }
 
     body {
       font-family: 'Optima', 'Gill Sans', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -48,6 +49,7 @@
       letter-spacing: 0.03em;
       color: var(--text);
       margin-bottom: 2px;
+      text-wrap: balance;
     }
 
     .subtitle {
@@ -58,7 +60,6 @@
       text-transform: uppercase;
     }
 
-    /* Game info bar */
     .game-info {
       display: flex;
       gap: 12px;
@@ -75,14 +76,13 @@
       padding: 5px 14px;
       font-size: 0.78rem;
       color: var(--muted);
+
+      & span {
+        color: var(--text);
+        font-weight: 600;
+      }
     }
 
-    .info-pill span {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    /* Score call banner */
     .callout {
       width: 100%;
       max-width: 480px;
@@ -110,7 +110,6 @@
       color: var(--gold);
     }
 
-    /* Scoreboard */
     .scoreboard {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -131,28 +130,30 @@
       gap: 10px;
       transition: border-color 0.2s, box-shadow 0.2s;
       position: relative;
-    }
 
-    .team-card.serving {
-      border-color: var(--gold-btn);
-      box-shadow: 0 0 12px rgba(184,135,10,0.22);
-    }
+      &.serving {
+        border-color: var(--gold-btn);
+        box-shadow: 0 0 12px oklch(from var(--gold-btn) l c h / 0.22);
 
-    .team-card.winning {
-      border-color: var(--sage);
-      box-shadow: 0 0 18px rgba(92,136,112,0.18);
-    }
+        & .serve-badge { opacity: 1; }
+      }
 
-    .team-card.winning.serving {
-      border-color: var(--sage);
-      box-shadow: 0 0 22px rgba(92,136,112,0.28);
+      &.winning {
+        border-color: var(--sage);
+        box-shadow: 0 0 18px oklch(from var(--sage) l c h / 0.18);
+      }
+
+      &.winning.serving {
+        border-color: var(--sage);
+        box-shadow: 0 0 22px oklch(from var(--sage) l c h / 0.28);
+      }
     }
 
     .serve-badge {
       position: absolute;
       top: -12px;
       left: 50%;
-      transform: translateX(-50%);
+      translate: -50% 0;
       background: var(--gold-btn);
       color: #fff;
       font-size: 0.65rem;
@@ -166,8 +167,6 @@
       transition: opacity 0.2s;
     }
 
-    .team-card.serving .serve-badge { opacity: 1; }
-
     .team-name {
       font-size: 0.85rem;
       font-weight: 600;
@@ -177,7 +176,6 @@
       text-align: center;
     }
 
-    /* Doubles player chips */
     .player-list {
       display: flex;
       gap: 6px;
@@ -199,13 +197,13 @@
       max-width: 96px;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
 
-    .player.active-server {
-      background: var(--gold-btn);
-      color: #fff;
-      font-weight: 700;
-      border-color: var(--gold-btn);
+      &.active-server {
+        background: var(--gold-btn);
+        color: #fff;
+        font-weight: 700;
+        border-color: var(--gold-btn);
+      }
     }
 
     .score-display {
@@ -232,13 +230,13 @@
       font-weight: 700;
       cursor: pointer;
       touch-action: manipulation;
-      transition: transform 0.1s, opacity 0.1s;
+      transition: scale 0.1s, opacity 0.1s;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
 
-    button:active { transform: scale(0.93); }
+      &:active { scale: 0.93; }
+    }
 
     .btn-score {
       background: var(--sage);
@@ -246,9 +244,9 @@
       width: 56px;
       height: 56px;
       font-size: 1.8rem;
-    }
 
-    .btn-score:hover { background: var(--sage-dark); }
+      &:hover { background: var(--sage-dark); }
+    }
 
     .btn-undo {
       background: var(--border);
@@ -256,11 +254,10 @@
       width: 40px;
       height: 56px;
       font-size: 1.1rem;
+
+      &:hover { background: #b8b09a; color: var(--text); }
     }
 
-    .btn-undo:hover { background: #b8b09a; color: var(--text); }
-
-    /* Serve controls */
     .serve-controls {
       width: 100%;
       max-width: 480px;
@@ -301,16 +298,15 @@
       font-weight: 600;
       letter-spacing: 0.06em;
       transition: background 0.15s, color 0.15s;
+
+      &.active {
+        background: var(--gold-btn);
+        color: #fff;
+      }
+
+      &:hover:not(.active) { background: #b8b09a; color: var(--text); }
     }
 
-    .btn-serve.active {
-      background: var(--gold-btn);
-      color: #fff;
-    }
-
-    .btn-serve:hover:not(.active) { background: #b8b09a; color: var(--text); }
-
-    /* Actions */
     .actions {
       display: flex;
       gap: 10px;
@@ -328,12 +324,11 @@
       font-size: 0.8rem;
       font-weight: 600;
       letter-spacing: 0.06em;
+
+      &:hover { background: #b8b09a; color: var(--text); }
+      &.danger:hover { background: oklch(from var(--red) l c h / 0.14); color: var(--red); }
     }
 
-    .btn-action:hover { background: #b8b09a; color: var(--text); }
-    .btn-action.danger:hover { background: rgba(139,46,26,0.14); color: var(--red); }
-
-    /* Settings panel */
     .settings {
       width: 100%;
       max-width: 480px;
@@ -358,34 +353,25 @@
       justify-content: space-between;
       gap: 8px;
       margin-bottom: 10px;
-    }
 
-    .setting-row:last-child { margin-bottom: 0; }
+      &:last-child { margin-bottom: 0; }
+
+      & :is(input[type="text"], input[type="number"]) {
+        background: var(--border);
+        border: 1px solid #4a4232;
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 0.85rem;
+        padding: 6px 10px;
+        text-align: center;
+      }
+
+      & input[type="text"] { width: 120px; }
+      & input[type="number"] { width: 64px; }
+    }
 
     .setting-label { font-size: 0.85rem; color: var(--text); }
-    .setting-sublabel { font-size: 0.78rem; color: var(--muted); padding-left: 10px; }
-
-    .setting-row input[type="text"] {
-      background: var(--border);
-      border: 1px solid #4a4232;
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 0.85rem;
-      padding: 6px 10px;
-      width: 120px;
-      text-align: center;
-    }
-
-    .setting-row input[type="number"] {
-      background: var(--border);
-      border: 1px solid #4a4232;
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 0.85rem;
-      padding: 6px 10px;
-      width: 64px;
-      text-align: center;
-    }
+    .setting-sublabel { font-size: 0.78rem; color: var(--muted); padding-inline-start: 10px; }
 
     input:focus { outline: 2px solid var(--gold); border-color: transparent; }
 
@@ -402,25 +388,24 @@
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
       border: none;
+
+      &.on {
+        background: var(--sage);
+        color: #fff;
+      }
     }
 
-    .btn-toggle.on {
-      background: var(--sage);
-      color: #fff;
-    }
-
-    /* Win modal */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(28,26,16,0.72);
+      background: oklch(from var(--text) l c h / 0.72);
       z-index: 100;
       align-items: center;
       justify-content: center;
-    }
 
-    .modal-overlay.show { display: flex; }
+      &.show { display: flex; }
+    }
 
     .modal {
       background: var(--card);
@@ -430,11 +415,11 @@
       text-align: center;
       max-width: 320px;
       width: 90%;
-      box-shadow: 0 0 40px rgba(92,136,112,0.25);
+      box-shadow: 0 0 40px oklch(from var(--sage) l c h / 0.25);
     }
 
     .modal-emoji { font-size: 3rem; margin-bottom: 10px; }
-    .modal-title { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: var(--sage); margin-bottom: 6px; }
+    .modal-title { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; font-weight: 700; color: var(--sage); margin-bottom: 6px; text-wrap: balance; }
     .modal-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 24px; }
 
     .btn-new-game {
@@ -448,14 +433,13 @@
       width: 100%;
       border: none;
       cursor: pointer;
-    }
 
-    .btn-new-game:hover { background: var(--sage-dark); }
-    .btn-new-game:active { transform: scale(0.97); }
+      &:hover { background: var(--sage-dark); }
+      &:active { scale: 0.97; }
+    }
 
     .hidden { display: none !important; }
 
-    /* Rules panel */
     .rules {
       width: 100%;
       max-width: 480px;
@@ -476,37 +460,37 @@
 
     .rules-section {
       margin-bottom: 12px;
-    }
 
-    .rules-section:last-child { margin-bottom: 0; }
+      &:last-child { margin-bottom: 0; }
 
-    .rules-section h3 {
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--sage);
-      margin-bottom: 5px;
-    }
+      & h3 {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--sage);
+        margin-bottom: 5px;
+      }
 
-    .rules-section ul {
-      list-style: none;
-      padding: 0;
-    }
+      & ul {
+        list-style: none;
+        padding: 0;
 
-    .rules-section ul li {
-      font-size: 0.82rem;
-      color: var(--text);
-      padding: 3px 0 3px 14px;
-      position: relative;
-      line-height: 1.4;
-    }
+        & li {
+          font-size: 0.82rem;
+          color: var(--text);
+          padding: 3px 0 3px 14px;
+          position: relative;
+          line-height: 1.4;
 
-    .rules-section ul li::before {
-      content: '·';
-      position: absolute;
-      left: 4px;
-      color: var(--muted);
+          &::before {
+            content: '·';
+            position: absolute;
+            left: 4px;
+            color: var(--muted);
+          }
+        }
+      }
     }
   </style>
 </head>

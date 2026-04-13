@@ -8,11 +8,21 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #f5f5f0;
+      --text: #222;
+      --muted: #666;
+      --accent: #1a6fb5;
+      --card: #fff;
+      --border: #ddd;
+      --border-hover: #999;
+    }
+
     body {
       font-family: system-ui, Helvetica, Arial, sans-serif;
-      background: #f5f5f0;
-      color: #222;
-      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
       padding: 3rem 1.5rem;
       display: flex;
       align-items: center;
@@ -32,8 +42,8 @@
     }
 
     @keyframes wobble {
-      0%, 100% { transform: rotate(-8deg); }
-      50% { transform: rotate(8deg); }
+      0%, 100% { rotate: -8deg; }
+      50% { rotate: 8deg; }
     }
 
     h1 {
@@ -41,31 +51,32 @@
       font-weight: 700;
       letter-spacing: -0.02em;
       margin-top: 1rem;
+      text-wrap: balance;
     }
 
     p {
       margin-top: 0.5rem;
-      color: #666;
+      color: var(--muted);
       font-size: 0.95rem;
     }
 
     a {
       display: inline-block;
       margin-top: 2rem;
-      background: #fff;
-      border: 1px solid #ddd;
+      background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 1.1rem 1.25rem;
       text-decoration: none;
       font-size: 1.05rem;
       font-weight: 600;
-      color: #1a6fb5;
+      color: var(--accent);
       transition: border-color 0.15s, box-shadow 0.15s;
-    }
 
-    a:hover {
-      border-color: #999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      &:hover {
+        border-color: var(--border-hover);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      }
     }
   </style>
 </head>
