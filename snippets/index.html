@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://snippets-worker.tfduesing.workers.dev;">
   <title>Snippets</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -193,6 +194,33 @@
       justify-content: center;
       color: #bbb;
       font-size: 0.95rem;
+      text-align: center;
+      padding: 1rem;
+
+      &.error {
+        color: #c0392b;
+      }
+    }
+
+    .client-list-status {
+      padding: 0.85rem 1rem;
+      color: #bbb;
+      font-size: 0.9rem;
+      text-align: center;
+
+      &.error {
+        color: #c0392b;
+      }
+    }
+
+    .save-indicator {
+      font-size: 0.75rem;
+      color: #bbb;
+      margin-inline-start: 0.5rem;
+      flex-shrink: 0;
+
+      &.saving { color: #b5556e; }
+      &.error { color: #c0392b; }
     }
 
     .add-client-btn {
@@ -270,89 +298,59 @@
   </style>
 </head>
 <body>
-  <div class="demo-banner">βeta — data stored in browser only</div>
+  <div class="demo-banner">βeta — shared demo data, synced across visitors</div>
   <header>
     <h1>Snippets <span>Client Notes</span></h1>
   </header>
   <div class="app" id="app">
     <div class="client-list" id="clientList"></div>
     <div class="notes-panel" id="notesPanel">
-      <div class="empty-state" id="emptyState">Select a client to view notes</div>
+      <div class="empty-state" id="emptyState">Loading…</div>
     </div>
   </div>
 
   <script>
-    const DEFAULT_CLIENTS = [
-      {
-        id: "1",
-        name: "Maria Santos",
-        notes: "Prefers balayage highlights, warm caramel tones. Sensitive scalp — use sulfate-free developer only.\n\nLast visit: root touch-up + gloss (6N base, 8G ends). Likes to keep length past shoulders, no more than half an inch off.\n\nSchedules every 7 weeks. Prefers Saturday mornings."
-      },
-      {
-        id: "2",
-        name: "Jordan Ellis",
-        notes: "Textured crop, faded sides (#2 guard blended to #4). Cowlick at crown — always cut against the grain.\n\nUses matte clay for styling. Allergic to tea tree oil — avoid Paul Mitchell line.\n\nLikes to chat about basketball. Tips well, always pays cash."
-      },
-      {
-        id: "3",
-        name: "Priya Kapoor",
-        notes: "Long layers with face-framing pieces. Very thick, coarse hair — needs thinning shears on the ends.\n\nDoes henna at home between visits (avoid bleach overlap). Likes a blowout with a round brush, lots of volume at the roots.\n\nComes in every 10–12 weeks. Brings chai sometimes!"
-      },
-      {
-        id: "4",
-        name: "Deshawn Mitchell",
-        notes: "High top fade, line-up every 3 weeks. Beard trim — keep it neat, rounded at the jawline.\n\nUses Cantu leave-in conditioner. Scalp tends to get dry in winter — recommend tea tree shampoo (not the Paul Mitchell, the generic).\n\nAlways books the last slot on Fridays."
-      },
-      {
-        id: "5",
-        name: "Sophie Brennan",
-        notes: "Pixie cut, keeps it very short on the sides. Currently platinum blonde — touch up every 5 weeks (30 vol developer, Wella T18 toner).\n\nSensitive ears — be careful with the clippers around the nape.\n\nBrings her daughter sometimes (age ~4, just wants a trim)."
-      },
-      {
-        id: "6",
-        name: "Carlos Reyes",
-        notes: "Classic taper, medium length on top. Slicks it back with pomade — likes a bit of shine.\n\nGray blending every other visit (just the temples). Has a scar behind the left ear — work around it gently.\n\nReferred by Maria Santos. Prefers appointments before noon."
-      },
-      {
-        id: "7",
-        name: "Aisha Johnson",
-        notes: "Protective styles — usually box braids or twists. Came in last time for a silk press.\n\nEdges are delicate — don't pull too tight around the hairline. Uses Olaplex at home.\n\nWants to try a copper rinse next visit. Send her a swatch photo before she comes in."
-      },
-      {
-        id: "8",
-        name: "Liam Kowalski",
-        notes: "Shoulder-length wavy hair, just wants a clean-up every 8 weeks. No layers — one length, blunt cut.\n\nDoesn't like product. Air dries only. Split ends tend to get bad — recommend a trim every 6 weeks instead.\n\nVery quiet, prefers no small talk. Reads on his phone during the cut."
-      }
-    ];
+    const API_URL = "https://snippets-worker.tfduesing.workers.dev/clients";
 
-    const STORAGE_KEY = "snippets_clients";
-
-    function loadClients() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try { return JSON.parse(stored); } catch(e) { /* fall through */ }
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CLIENTS));
-      return DEFAULT_CLIENTS;
-    }
-
-    function saveClients(clients) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
-    }
-
-    let clients = loadClients();
+    let clients = [];
     let selectedId = null;
-    let saveTimeout = null;
+    const pendingSaves = new Map(); // id -> { timeout, patch, indicator }
 
     const app = document.getElementById("app");
     const clientList = document.getElementById("clientList");
     const notesPanel = document.getElementById("notesPanel");
 
     function getInitials(name) {
-      return name.split(" ").map(w => w[0]).join("").toUpperCase();
+      return (name || "?").split(" ").map(w => w[0]).filter(Boolean).join("").toUpperCase() || "?";
     }
 
-    let nextId = Math.max(0, ...clients.map(c => parseInt(c.id))) + 1;
+    async function apiFetch(path, options = {}) {
+      const res = await fetch(`${API_URL}${path}`, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `HTTP ${res.status}`);
+      }
+      return res.status === 204 ? null : res.json();
+    }
+
+    function renderMessage(message, className = "empty-state") {
+      notesPanel.innerHTML = "";
+      const div = document.createElement("div");
+      div.className = className;
+      div.textContent = message;
+      notesPanel.appendChild(div);
+    }
+
+    function renderError(message) {
+      renderMessage(message, "empty-state error");
+    }
+
+    function renderEmpty() {
+      renderMessage("Select a client to view notes");
+    }
 
     function renderClientList() {
       clientList.innerHTML = "";
@@ -366,27 +364,99 @@
       clients.forEach(c => {
         const btn = document.createElement("button");
         btn.className = c.id === selectedId ? "active" : "";
-        btn.innerHTML = `<div class="client-avatar">${getInitials(c.name)}</div><span>${c.name}</span>`;
+        const avatar = document.createElement("div");
+        avatar.className = "client-avatar";
+        avatar.textContent = getInitials(c.name);
+        const label = document.createElement("span");
+        label.textContent = c.name || "(unnamed)";
+        btn.appendChild(avatar);
+        btn.appendChild(label);
         btn.onclick = () => selectClient(c.id);
         clientList.appendChild(btn);
       });
     }
 
-    function addClient() {
-      const newClient = { id: String(nextId++), name: "New Client", notes: "" };
-      clients.unshift(newClient);
-      saveClients(clients);
-      selectClient(newClient.id);
+    async function loadClients() {
+      try {
+        const data = await apiFetch("");
+        clients = data.clients;
+        renderClientList();
+        renderEmpty();
+      } catch (err) {
+        clientList.innerHTML = "";
+        const status = document.createElement("div");
+        status.className = "client-list-status error";
+        status.textContent = `Failed to load: ${err.message}`;
+        clientList.appendChild(status);
+        renderError(`Could not load clients: ${err.message}`);
+      }
     }
 
-    function deleteClient(id) {
+    async function addClient() {
+      try {
+        const newClient = await apiFetch("", {
+          method: "POST",
+          body: JSON.stringify({ name: "New Client", notes: "" }),
+        });
+        clients.unshift(newClient);
+        selectClient(newClient.id);
+      } catch (err) {
+        alert(`Failed to add client: ${err.message}`);
+      }
+    }
+
+    async function deleteClient(id) {
       if (!confirm("Delete this client and all their notes?")) return;
-      clients = clients.filter(c => c.id !== id);
-      saveClients(clients);
-      selectedId = null;
-      app.classList.remove("show-notes");
-      renderClientList();
-      renderEmpty();
+      try {
+        await apiFetch(`/${id}`, { method: "DELETE" });
+        pendingSaves.delete(id);
+        clients = clients.filter(c => c.id !== id);
+        selectedId = null;
+        app.classList.remove("show-notes");
+        renderClientList();
+        renderEmpty();
+      } catch (err) {
+        alert(`Failed to delete: ${err.message}`);
+      }
+    }
+
+    function schedulePatch(client, patch, indicator) {
+      const existing = pendingSaves.get(client.id);
+      if (existing) {
+        clearTimeout(existing.timeout);
+        Object.assign(existing.patch, patch);
+        existing.indicator = indicator;
+      }
+      const entry = existing || { patch: { ...patch }, indicator };
+      entry.timeout = setTimeout(() => flushPatch(client), 400);
+      pendingSaves.set(client.id, entry);
+      setIndicator(indicator, "saving", "Saving\u2026");
+    }
+
+    async function flushPatch(client) {
+      const entry = pendingSaves.get(client.id);
+      if (!entry) return;
+      pendingSaves.delete(client.id);
+      try {
+        await apiFetch(`/${client.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(entry.patch),
+        });
+        setIndicator(entry.indicator, "", "Saved");
+        setTimeout(() => {
+          if (entry.indicator && entry.indicator.textContent === "Saved") {
+            setIndicator(entry.indicator, "", "");
+          }
+        }, 1200);
+      } catch (err) {
+        setIndicator(entry.indicator, "error", `Save failed: ${err.message}`);
+      }
+    }
+
+    function setIndicator(el, className, text) {
+      if (!el) return;
+      el.className = `save-indicator ${className}`.trim();
+      el.textContent = text;
     }
 
     function selectClient(id) {
@@ -411,14 +481,20 @@
       nameInput.type = "text";
       nameInput.className = "client-name-input";
       nameInput.value = client.name;
+
+      const indicator = document.createElement("span");
+      indicator.className = "save-indicator";
+
       nameInput.oninput = () => {
         client.name = nameInput.value;
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => { saveClients(clients); renderClientList(); }, 400);
+        // Update the list label live; server save is debounced.
+        renderClientList();
+        schedulePatch(client, { name: nameInput.value }, indicator);
       };
 
       nameRow.appendChild(backBtn);
       nameRow.appendChild(nameInput);
+      nameRow.appendChild(indicator);
 
       const p = document.createElement("p");
       p.textContent = "Click name to edit \u00b7 notes auto-save";
@@ -432,8 +508,7 @@
       textarea.placeholder = "Add notes about this client\u2026";
       textarea.oninput = () => {
         client.notes = textarea.value;
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => saveClients(clients), 400);
+        schedulePatch(client, { notes: textarea.value }, indicator);
       };
       notesPanel.appendChild(textarea);
 
@@ -453,11 +528,20 @@
       }
     }
 
-    function renderEmpty() {
-      notesPanel.innerHTML = '<div class="empty-state">Select a client to view notes</div>';
-    }
+    // Flush any pending saves before unload so trailing edits aren't lost.
+    window.addEventListener("beforeunload", () => {
+      for (const [id, entry] of pendingSaves) {
+        clearTimeout(entry.timeout);
+        fetch(`${API_URL}/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(entry.patch),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    });
 
-    renderClientList();
+    loadClients();
   </script>
 </body>
 </html>
