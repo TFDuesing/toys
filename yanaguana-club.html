@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Yanaguana Fiesta Club</title>
+  <meta name="description" content="A San Antonio social club celebrating the spirit of Fiesta — friends, food, music, and the city we love.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #1a3d6e;
+      --gold:       #c49a3a;
+      --turquoise:  #4ab8d6;
+      --green:      #2d6b32;
+      --hot-pink:   #e8177f;
+      --orange:     #f47c20;
+      --yellow:     #f5c518;
+      --cream:      #fdf8f0;
+      --cream-dark: #f5ede0;
+      --text:       #1a1a1a;
+      --text-muted: #5a4a3a;
+    }
+
+    body {
+      font-family: 'Nunito', system-ui, Helvetica, Arial, sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Papel Picado Banner ─────────────────────────────── */
+    .picado-banner {
+      width: 100%;
+      background: var(--navy);
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .picado-banner::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .pennant {
+      flex-shrink: 0;
+      width: 36px;
+      height: 52px;
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+    }
+
+    .pennant:nth-child(5n+1) { background: var(--hot-pink); }
+    .pennant:nth-child(5n+2) { background: var(--yellow); }
+    .pennant:nth-child(5n+3) { background: var(--turquoise); }
+    .pennant:nth-child(5n+4) { background: var(--orange); }
+    .pennant:nth-child(5n+5) { background: var(--green); }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .hero {
+      background: var(--navy);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 65% 65% at 50% 40%, rgba(196, 154, 58, 0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .logo {
+      width: min(300px, 80vw);
+      height: auto;
+      border-radius: 50%;
+      border: 4px solid var(--gold);
+      box-shadow:
+        0 0 0 8px rgba(196, 154, 58, 0.12),
+        0 0 40px rgba(196, 154, 58, 0.4),
+        0 0 80px rgba(196, 154, 58, 0.15);
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+      background: var(--navy);
+      min-height: 100px;
+    }
+
+    h1 {
+      font-family: 'Lilita One', cursive;
+      font-size: clamp(2.2rem, 8vw, 4rem);
+      color: var(--gold);
+      letter-spacing: 0.01em;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+      text-wrap: balance;
+      position: relative;
+      z-index: 1;
+      line-height: 1.1;
+    }
+
+    .tagline {
+      color: var(--turquoise);
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      font-weight: 600;
+      max-width: 520px;
+      margin-top: 1rem;
+      line-height: 1.55;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Main content ────────────────────────────────────── */
+    main {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      flex: 1;
+    }
+
+    .section {
+      padding: 3.5rem 0;
+      border-bottom: 1px solid rgba(196, 154, 58, 0.2);
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section h2 {
+      font-family: 'Lilita One', cursive;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      color: var(--navy);
+      margin-bottom: 1.25rem;
+      text-wrap: balance;
+    }
+
+    .section p {
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--text);
+      margin-bottom: 1rem;
+      text-wrap: pretty;
+    }
+
+    .section p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ── Coming Soon Card ────────────────────────────────── */
+    .coming-soon-card {
+      background: var(--cream-dark);
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(196, 154, 58, 0.12);
+    }
+
+    .coming-soon-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .coming-soon-headline {
+      font-family: 'Lilita One', cursive;
+      font-size: 1.3rem;
+      color: var(--navy);
+      margin-bottom: 0.75rem;
+    }
+
+    .coming-soon-card p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 0.5rem;
+    }
+
+    .coming-soon-card a {
+      color: var(--hot-pink);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .coming-soon-card a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    footer {
+      background: var(--navy);
+      width: 100%;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .history-note {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.48);
+      font-style: italic;
+      max-width: 560px;
+      margin: 0 auto 1.25rem;
+      line-height: 1.65;
+    }
+
+    .back-link a {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .back-link a:hover {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="picado-banner" aria-hidden="true">
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span>
+  </div>
+
+  <header class="hero">
+    <img class="logo" src="yanaguana-club-logo.png" alt="Yanaguana Fiesta Club — a leaping navy jaguar with Aztec spots and a roadrunner soar above the Alamo and Tower of the Americas, surrounded by a spring pool, agave, and cactus">
+    <h1>Yanaguana Fiesta Club</h1>
+    <p class="tagline">San Antonio friends celebrating Fiesta, community, and the springs that started it all.</p>
+  </header>
+
+  <div class="picado-banner" aria-hidden="true">
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span>
+  </div>
+
+  <main>
+    <section id="about" class="section">
+      <h2>About the Club</h2>
+      <p>The Yanaguana Fiesta Club is a social club for San Antonio friends who love Fiesta season, local culture, and finding excuses to gather, eat, and celebrate. Named after the Payaya name for the sacred springs along the San Antonio River, we believe every gathering is worth celebrating in style.</p>
+      <p>We're just getting started — join us as we plan our first events, build our traditions, and carry on the spirit of one of America's oldest and most vibrant city festivals.</p>
+    </section>
+
+    <section id="events" class="section">
+      <h2>Events</h2>
+      <div class="coming-soon-card">
+        <p class="coming-soon-icon">🎉</p>
+        <p class="coming-soon-headline">Our first fiesta is in the works.</p>
+        <p>Stay tuned for announcements about our inaugural gathering — there will be food, music, good company, and plenty of confetti.</p>
+        <p>Want to be in the loop? Drop us a note at <a href="mailto:hello@yanaguana.club">hello@yanaguana.club</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p class="history-note"><em>Yanaguana</em> is the Payaya name for the springs that fed the San Antonio River — the source of life that drew people to this land for thousands of years before the city was ever founded.</p>
+    <p class="back-link"><a href="index.html">&larr; back to toys</a></p>
+  </footer>
+
+</body>
+</html>
