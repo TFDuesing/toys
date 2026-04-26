@@ -37,38 +37,14 @@
     /* ── Papel Picado Banner ─────────────────────────────── */
     .picado-banner {
       width: 100%;
+      line-height: 0;
       background: var(--navy);
-      display: flex;
-      gap: 3px;
-      overflow: hidden;
-      position: relative;
-      padding-top: 8px;
     }
 
-    .picado-banner::before {
-      content: '';
-      position: absolute;
-      top: 4px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: rgba(255, 255, 255, 0.35);
-      z-index: 1;
+    .picado-banner img {
+      width: 100%;
+      display: block;
     }
-
-    .pennant {
-      flex-shrink: 0;
-      width: 56px;
-      height: 72px;
-    }
-
-    .pennant:nth-child(7n+1) { background: var(--hot-pink); }
-    .pennant:nth-child(7n+2) { background: var(--yellow); }
-    .pennant:nth-child(7n+3) { background: var(--turquoise); }
-    .pennant:nth-child(7n+4) { background: var(--orange); }
-    .pennant:nth-child(7n+5) { background: var(--green); }
-    .pennant:nth-child(7n+6) { background: var(--purple); }
-    .pennant:nth-child(7n+7) { background: var(--red); }
 
     /* ── Hero ────────────────────────────────────────────── */
     .hero {
@@ -143,22 +119,7 @@
 <body>
 
   <div class="picado-banner" aria-hidden="true">
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
-    <span class="pennant"></span><span class="pennant"></span>
+    <img src="papel-picado-banner.svg" alt="">
   </div>
 
   <header class="hero">
