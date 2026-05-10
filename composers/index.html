@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>A Timeline of Composers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4ede0;
+    --bg-2: #ebe1cf;
+    --ink: #1a1814;
+    --ink-soft: #4a4438;
+    --ink-faint: #8a8170;
+    --rule: #c9bea7;
+    --baroque: #6b1d2c;
+    --classical: #8a6d1c;
+    --romantic: #1f4f3c;
+    --late-rom: #2a3a6b;
+    --modern: #4a2a5c;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(139, 109, 28, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(31, 79, 60, 0.04) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 8px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(36px, 6vw, 64px);
+    line-height: 1;
+    margin: 8px 0 0;
+    letter-spacing: -0.01em;
+  }
+
+  h1 .amp {
+    font-style: italic;
+    color: var(--baroque);
+  }
+
+  .subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 380px;
+    line-height: 1.4;
+    text-align: right;
+    font-style: italic;
+  }
+
+  .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 32px;
+    padding-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--rule);
+    padding: 8px 0;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    padding: 14px 0;
+    border-bottom: 1px dashed var(--rule);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+
+  .swatch {
+    width: 16px;
+    height: 10px;
+    border-radius: 1px;
+  }
+  .swatch.baroque   { background: var(--baroque); }
+  .swatch.classical { background: var(--classical); }
+  .swatch.romantic  { background: var(--romantic); }
+  .swatch.late-rom  { background: var(--late-rom); }
+  .swatch.modern    { background: var(--modern); }
+
+  /* Timeline */
+  .timeline-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 16px;
+    margin: 0 -8px;
+    padding: 0 8px 16px;
+  }
+
+  .timeline {
+    position: relative;
+    min-width: 920px;
+  }
+
+  .axis {
+    position: relative;
+    height: 36px;
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .axis-tick {
+    position: absolute;
+    bottom: 0;
+    width: 1px;
+    height: 8px;
+    background: var(--ink-soft);
+    transform: translateX(-0.5px);
+  }
+  .axis-tick.major { height: 12px; }
+
+  .axis-label {
+    position: absolute;
+    bottom: 14px;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  /* Era bands */
+  .era-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    opacity: 0.06;
+    pointer-events: none;
+  }
+
+  .era-label {
+    position: absolute;
+    top: 8px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Composer rows */
+  .rows {
+    position: relative;
+  }
+
+  .row {
+    position: relative;
+    height: 30px;
+    border-bottom: 1px solid rgba(201, 190, 167, 0.4);
+    transition: background 0.18s ease;
+  }
+
+  .row:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .row:hover .bar {
+    filter: brightness(1.05);
+    transform: translateY(-50%) scaleY(1.15);
+  }
+
+  .row:hover .composer-name {
+    color: var(--ink);
+  }
+
+  .composer-name {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    z-index: 3;
+    transition: color 0.15s ease;
+    text-shadow: 0 0 4px var(--bg), 0 0 4px var(--bg), 0 0 4px var(--bg);
+    padding-right: 6px;
+  }
+
+  .composer-name .surname {
+    font-weight: 600;
+  }
+
+  .composer-name.outside-left {
+    /* name placed before the bar */
+  }
+
+  .composer-name.outside-right {
+    /* name placed after the bar */
+  }
+
+  .composer-name.inside {
+    color: var(--bg);
+    text-shadow: none;
+    mix-blend-mode: normal;
+  }
+
+  .bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 14px;
+    border-radius: 1px;
+    z-index: 2;
+    transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+    cursor: default;
+  }
+  .bar.baroque   { background: var(--baroque); }
+  .bar.classical { background: var(--classical); }
+  .bar.romantic  { background: var(--romantic); }
+  .bar.late-rom  { background: var(--late-rom); }
+  .bar.modern    { background: var(--modern); }
+
+  /* Lifespan bar (faded) — full birth-to-death range */
+  .bar.bar-life {
+    opacity: 0.28;
+    z-index: 2;
+  }
+  .row:hover .bar.bar-life {
+    opacity: 0.42;
+  }
+
+  /* Active composing bar (saturated) — first to last work */
+  .bar.bar-active {
+    z-index: 3;
+  }
+
+  .bar::before,
+  .bar::after {
+    display: none;
+  }
+  .bar.living {
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 78%, transparent 100%);
+            mask-image: linear-gradient(to right, #000 0%, #000 78%, transparent 100%);
+  }
+
+  .years {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    z-index: 3;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+
+  /* Connections SVG layer */
+  .connections {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+    overflow: visible;
+    transition: opacity 0.28s ease;
+  }
+  .connections.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .connections.hidden path {
+    pointer-events: none;
+  }
+
+  /* Toggle button */
+  .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    letter-spacing: 0.02em;
+    user-select: none;
+  }
+  .toggle-btn:hover {
+    border-color: var(--ink-soft);
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .toggle-btn .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ink);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .toggle-btn[aria-pressed="false"] .dot {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--ink-faint);
+  }
+  .toggle-btn[aria-pressed="false"] {
+    color: var(--ink-faint);
+  }
+  .connections path {
+    fill: none;
+    stroke: #2a1f12;
+    stroke-width: 1;
+    opacity: 0.32;
+    pointer-events: stroke;
+    cursor: help;
+    transition: opacity 0.18s ease, stroke-width 0.18s ease;
+  }
+  .connections path.dashed {
+    stroke-dasharray: 3 3;
+  }
+  .connections path:hover,
+  .connections path.active {
+    opacity: 0.95;
+    stroke-width: 1.6;
+  }
+  .connections circle {
+    fill: #2a1f12;
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.18s ease, r 0.18s ease;
+  }
+  .connections .endpoint.active {
+    opacity: 1;
+    r: 3.2;
+  }
+
+  /* Connection line draw-in animation */
+  .connections path {
+    stroke-dashoffset: 0;
+  }
+  .connections.animate path {
+    animation: drawLine 1.2s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  @keyframes drawLine {
+    from { stroke-dasharray: 0 1000; opacity: 0; }
+    to   { stroke-dasharray: 1000 0; opacity: 0.32; }
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 16px;
+    border-radius: 2px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 100;
+    max-width: 280px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .tt-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .tooltip .tt-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .tooltip .tt-stats {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: rgba(244, 237, 224, 0.75);
+    margin-bottom: 8px;
+    letter-spacing: 0.01em;
+  }
+  .tooltip .tt-silence {
+    color: #d4a574;
+    font-style: italic;
+  }
+  .tooltip .tt-works {
+    color: rgba(244, 237, 224, 0.85);
+    font-style: italic;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Page load animation */
+  .row .bar {
+    transform-origin: left center;
+    animation: drawBar 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  @keyframes drawBar {
+    from { transform: translateY(-50%) scaleX(0); opacity: 0; }
+    to   { transform: translateY(-50%) scaleX(1); opacity: 1; }
+  }
+
+  @media (max-width: 720px) {
+    .page { padding: 24px 16px 40px; }
+    .header { flex-direction: column; align-items: flex-start; }
+    .subtitle { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div>
+      <div class="eyebrow">Fig. 01 — Three centuries of composition</div>
+      <h1>A Cartography <span class="amp">of</span><br/>Composers</h1>
+    </div>
+    <p class="subtitle">
+      The lives of twenty-six figures who shaped the symphonic and choral repertoire, plotted from cradle to grave.
+    </p>
+  </header>
+
+  <div class="meta">
+    <span>1678 – present · ~350 years · 29 lives · 17 ties</span>
+    <span>Bar height ≈ output volume · Saturated section ≈ active years</span>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch baroque"></span>Baroque · 1600–1750</div>
+    <div class="legend-item"><span class="swatch classical"></span>Classical · 1750–1820</div>
+    <div class="legend-item"><span class="swatch romantic"></span>Romantic · 1820–1880</div>
+    <div class="legend-item"><span class="swatch late-rom"></span>Late Romantic · 1880–1910</div>
+    <div class="legend-item"><span class="swatch modern"></span>20th Century · 1910–</div>
+    <div class="legend-item" style="margin-left:auto">
+      <svg width="22" height="10" style="overflow:visible">
+        <path d="M 1 5 Q 11 -3 21 5" fill="none" stroke="#2a1f12" stroke-width="1" opacity="0.6"/>
+      </svg>
+      <span>Direct contact</span>
+    </div>
+    <div class="legend-item">
+      <svg width="22" height="10" style="overflow:visible">
+        <path d="M 1 5 Q 11 -3 21 5" fill="none" stroke="#2a1f12" stroke-width="1" opacity="0.6" stroke-dasharray="3 3"/>
+      </svg>
+      <span>Posthumous influence</span>
+    </div>
+    <button class="toggle-btn" id="toggleConnections" aria-pressed="false" type="button">
+      <span class="dot"></span>
+      <span>Connections</span>
+    </button>
+  </div>
+
+  <div class="timeline-wrap">
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <div class="footer">
+    <span>Sources: standard biographical records</span>
+    <span>Drawn in the year 2026</span>
+  </div>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+  // Composer data — chronological by birth year
+  // hours = approximate total composed output (rough order-of-magnitude estimates)
+  // firstWork / lastWork = first and last meaningful compositions (lastWork: null = still active)
+  const composers = [
+    { name: 'Antonio Vivaldi',          surname: 'Vivaldi',       birth: 1678, death: 1741, era: 'baroque',   hours: 85,  firstWork: 1700, lastWork: 1741, works: 'The Four Seasons; Gloria in D; ~500 concertos' },
+    { name: 'Johann Sebastian Bach',    surname: 'Bach',          birth: 1685, death: 1750, era: 'baroque',   hours: 110, firstWork: 1700, lastWork: 1750, works: 'Mass in B minor; St. Matthew Passion; Brandenburg Concertos' },
+    { name: 'George Frideric Handel',   surname: 'Handel',        birth: 1685, death: 1759, era: 'baroque',   hours: 90,  firstWork: 1702, lastWork: 1757, works: 'Messiah; Water Music; Music for the Royal Fireworks' },
+    { name: 'Joseph Haydn',             surname: 'Haydn',         birth: 1732, death: 1809, era: 'classical', hours: 95,  firstWork: 1750, lastWork: 1803, works: '104 symphonies; The Creation; String Quartets Op. 76' },
+    { name: 'Wolfgang Amadeus Mozart',  surname: 'Mozart',        birth: 1756, death: 1791, era: 'classical', hours: 70,  firstWork: 1761, lastWork: 1791, works: 'Don Giovanni; Requiem; Symphony No. 41 “Jupiter”' },
+    { name: 'Ludwig van Beethoven',     surname: 'Beethoven',     birth: 1770, death: 1827, era: 'classical', hours: 40,  firstWork: 1782, lastWork: 1826, works: '9 symphonies; Missa Solemnis; late string quartets' },
+    { name: 'Franz Schubert',           surname: 'Schubert',      birth: 1797, death: 1828, era: 'romantic',  hours: 50,  firstWork: 1810, lastWork: 1828, works: 'Winterreise; Symphony No. 8 “Unfinished”; String Quintet' },
+    { name: 'Hector Berlioz',           surname: 'Berlioz',       birth: 1803, death: 1869, era: 'romantic',  hours: 25,  firstWork: 1818, lastWork: 1862, works: 'Symphonie fantastique; Grande messe des morts; Les Troyens' },
+    { name: 'Felix Mendelssohn',        surname: 'Mendelssohn',   birth: 1809, death: 1847, era: 'romantic',  hours: 30,  firstWork: 1820, lastWork: 1847, works: 'Elijah; Violin Concerto in E minor; Italian Symphony' },
+    { name: 'Frédéric Chopin',          surname: 'Chopin',        birth: 1810, death: 1849, era: 'romantic',  hours: 12,  firstWork: 1817, lastWork: 1849, works: 'Ballades; Nocturnes; Piano Concertos Nos. 1 & 2' },
+    { name: 'Robert Schumann',          surname: 'Schumann',      birth: 1810, death: 1856, era: 'romantic',  hours: 25,  firstWork: 1828, lastWork: 1854, works: 'Dichterliebe; Piano Concerto in A minor; Symphony No. 3' },
+    { name: 'Franz Liszt',              surname: 'Liszt',         birth: 1811, death: 1886, era: 'romantic',  hours: 75,  firstWork: 1822, lastWork: 1886, works: 'Sonata in B minor; Hungarian Rhapsodies; Années de pèlerinage' },
+    { name: 'Richard Wagner',           surname: 'Wagner',        birth: 1813, death: 1883, era: 'romantic',  hours: 55,  firstWork: 1832, lastWork: 1882, works: 'Der Ring des Nibelungen; Tristan und Isolde; Parsifal' },
+    { name: 'Giuseppe Verdi',           surname: 'Verdi',         birth: 1813, death: 1901, era: 'romantic',  hours: 70,  firstWork: 1839, lastWork: 1898, works: 'La traviata; Aida; Requiem; Otello' },
+    { name: 'Johannes Brahms',          surname: 'Brahms',        birth: 1833, death: 1897, era: 'romantic',  hours: 30,  firstWork: 1851, lastWork: 1896, works: 'Ein deutsches Requiem; 4 symphonies; Violin Concerto' },
+    { name: 'Pyotr Ilyich Tchaikovsky', surname: 'Tchaikovsky',   birth: 1840, death: 1893, era: 'romantic',  hours: 40,  firstWork: 1864, lastWork: 1893, works: 'Swan Lake; 1812 Overture; Symphony No. 6 “Pathétique”' },
+    { name: 'Antonín Dvořák',           surname: 'Dvořák',        birth: 1841, death: 1904, era: 'romantic',  hours: 30,  firstWork: 1862, lastWork: 1904, works: 'Symphony No. 9 “New World”; Cello Concerto; Stabat Mater' },
+    { name: 'Gabriel Fauré',             surname: 'Fauré',         birth: 1845, death: 1924, era: 'late-rom',  hours: 15,  firstWork: 1860, lastWork: 1924, works: 'Requiem; Pavane; Pelléas et Mélisande; many mélodies' },
+    { name: 'Gustav Mahler',            surname: 'Mahler',        birth: 1860, death: 1911, era: 'late-rom',  hours: 15,  firstWork: 1880, lastWork: 1910, works: 'Symphony No. 2 “Resurrection”; Das Lied von der Erde; Symphony No. 9' },
+    { name: 'Claude Debussy',           surname: 'Debussy',       birth: 1862, death: 1918, era: 'late-rom',  hours: 15,  firstWork: 1880, lastWork: 1917, works: 'Prélude à l’après-midi d’un faune; La mer; Pelléas et Mélisande' },
+    { name: 'Richard Strauss',          surname: 'R. Strauss',    birth: 1864, death: 1949, era: 'late-rom',  hours: 55,  firstWork: 1880, lastWork: 1948, works: 'Also sprach Zarathustra; Der Rosenkavalier; Four Last Songs' },
+    { name: 'Jean Sibelius',            surname: 'Sibelius',      birth: 1865, death: 1957, era: 'late-rom',  hours: 80,  firstWork: 1875, lastWork: 1929, works: 'Finlandia; Violin Concerto; 7 symphonies' },
+    { name: 'Sergei Rachmaninoff',      surname: 'Rachmaninoff',  birth: 1873, death: 1943, era: 'late-rom',  hours: 20,  firstWork: 1890, lastWork: 1941, works: 'Piano Concerto No. 2; Rhapsody on a Theme of Paganini; All-Night Vigil' },
+    { name: 'Maurice Ravel',            surname: 'Ravel',         birth: 1875, death: 1937, era: 'late-rom',  hours: 10,  firstWork: 1893, lastWork: 1932, works: 'Boléro; Daphnis et Chloé; Piano Concerto in G' },
+    { name: 'Igor Stravinsky',          surname: 'Stravinsky',    birth: 1882, death: 1971, era: 'modern',    hours: 25,  firstWork: 1898, lastWork: 1968, works: 'The Rite of Spring; The Firebird; Symphony of Psalms' },
+    { name: 'Sergei Prokofiev',         surname: 'Prokofiev',     birth: 1891, death: 1953, era: 'modern',    hours: 35,  firstWork: 1908, lastWork: 1953, works: 'Romeo and Juliet; Peter and the Wolf; Symphony No. 5' },
+    { name: 'Dmitri Shostakovich',      surname: 'Shostakovich',  birth: 1906, death: 1975, era: 'modern',    hours: 40,  firstWork: 1919, lastWork: 1975, works: '15 symphonies; String Quartet No. 8; Lady Macbeth of Mtsensk' },
+    { name: 'Benjamin Britten',          surname: 'Britten',       birth: 1913, death: 1976, era: 'modern',    hours: 25,  firstWork: 1922, lastWork: 1976, works: 'Peter Grimes; War Requiem; A Ceremony of Carols; Young Person\'s Guide to the Orchestra' },
+    { name: 'John Rutter',               surname: 'Rutter',        birth: 1945, death: null, era: 'modern',    hours: 18,  firstWork: 1963, lastWork: null, works: 'Requiem; Gloria; Magnificat; For the Beauty of the Earth; many Christmas carols' },
+  ];
+
+  // Layout
+  const START_YEAR = 1675;
+  const END_YEAR = 2030;
+  const PADDING_LEFT = 0;
+  const ROW_HEIGHT = 30;
+
+  const tl = document.getElementById('timeline');
+  const yearSpan = END_YEAR - START_YEAR;
+
+  // Era bands (background)
+  const eras = [
+    { name: 'Baroque',        start: 1675, end: 1750, color: 'var(--baroque)' },
+    { name: 'Classical',      start: 1750, end: 1820, color: 'var(--classical)' },
+    { name: 'Romantic',       start: 1820, end: 1880, color: 'var(--romantic)' },
+    { name: 'Late Romantic',  start: 1880, end: 1910, color: 'var(--late-rom)' },
+    { name: '20th Century',   start: 1910, end: 2030, color: 'var(--modern)' },
+  ];
+
+  function pct(year) {
+    return ((year - START_YEAR) / yearSpan) * 100;
+  }
+
+  // Build axis
+  const axis = document.createElement('div');
+  axis.className = 'axis';
+
+  // Era bands inside axis area extending into rows
+  // We add them as absolutely positioned overlays inside timeline (behind rows)
+  const bandsContainer = document.createElement('div');
+  bandsContainer.style.position = 'absolute';
+  bandsContainer.style.left = '0';
+  bandsContainer.style.right = '0';
+  bandsContainer.style.top = '0';
+  bandsContainer.style.bottom = '0';
+  bandsContainer.style.pointerEvents = 'none';
+  bandsContainer.style.zIndex = '0';
+
+  eras.forEach(era => {
+    const band = document.createElement('div');
+    band.className = 'era-band';
+    band.style.left = pct(era.start) + '%';
+    band.style.width = (pct(era.end) - pct(era.start)) + '%';
+    band.style.background = era.color;
+    bandsContainer.appendChild(band);
+
+    const label = document.createElement('div');
+    label.className = 'era-label';
+    label.textContent = era.name;
+    label.style.left = (pct(era.start) + (pct(era.end) - pct(era.start)) / 2) + '%';
+    label.style.transform = 'translateX(-50%)';
+    axis.appendChild(label);
+  });
+
+  // Year ticks every 25 years, major every 50
+  for (let y = 1700; y <= 2025; y += 25) {
+    const tick = document.createElement('div');
+    tick.className = 'axis-tick' + (y % 50 === 0 ? ' major' : '');
+    tick.style.left = pct(y) + '%';
+    axis.appendChild(tick);
+
+    if (y % 50 === 0) {
+      const lbl = document.createElement('div');
+      lbl.className = 'axis-label';
+      lbl.textContent = y;
+      lbl.style.left = pct(y) + '%';
+      axis.appendChild(lbl);
+    }
+  }
+
+  tl.appendChild(axis);
+
+  // Rows container
+  const rows = document.createElement('div');
+  rows.className = 'rows';
+  rows.style.position = 'relative';
+  rows.appendChild(bandsContainer);
+
+  // Bar height encodes total composed output (square-root scale to compress the range)
+  function barHeight(hours) {
+    const minH = 5;
+    const maxH = 22;
+    const maxHours = 110;
+    const t = Math.sqrt(Math.min(hours, maxHours) / maxHours);
+    return minH + (maxH - minH) * t;
+  }
+
+  composers.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+
+    const isLiving = c.death === null;
+    const effectiveDeath = isLiving ? new Date().getFullYear() : c.death;
+    const isStillActive = c.lastWork === null;
+    const effectiveLastWork = isStillActive ? new Date().getFullYear() : c.lastWork;
+    const h = barHeight(c.hours);
+
+    // Lifespan bar (faded outer)
+    const lifeBar = document.createElement('div');
+    lifeBar.className = 'bar bar-life ' + c.era + (isLiving ? ' living' : '');
+    const lifeLeft = pct(c.birth);
+    const lifeWidth = pct(effectiveDeath) - pct(c.birth);
+    lifeBar.style.left = lifeLeft + '%';
+    lifeBar.style.width = lifeWidth + '%';
+    lifeBar.style.height = h + 'px';
+    lifeBar.style.animationDelay = (i * 35) + 'ms';
+    row.appendChild(lifeBar);
+
+    // Active composing bar (saturated inner)
+    const activeBar = document.createElement('div');
+    activeBar.className = 'bar bar-active ' + c.era + (isStillActive ? ' living' : '');
+    const activeLeft = pct(c.firstWork);
+    const activeWidth = pct(effectiveLastWork) - pct(c.firstWork);
+    activeBar.style.left = activeLeft + '%';
+    activeBar.style.width = activeWidth + '%';
+    activeBar.style.height = h + 'px';
+    activeBar.style.animationDelay = (i * 35 + 120) + 'ms';
+    row.appendChild(activeBar);
+
+    // Composer name — placement uses the lifespan bar geometry
+    const leftPct = lifeLeft;
+    const widthPct = lifeWidth;
+
+    // Composer name — placed cleverly: if bar is wide enough, inside; if at right edge, before the bar; otherwise after
+    const name = document.createElement('div');
+    name.className = 'composer-name';
+
+    // Decide placement
+    // Approximate pixel width: depends on viewport. Use percentage logic:
+    // If bar width > 14% of timeline → name inside bar (left-padded)
+    // Else if bar starts in right half (>50%) → name to the LEFT of bar
+    // Else → name to the RIGHT of bar
+    if (widthPct > 14) {
+      name.classList.add('inside');
+      name.style.left = `calc(${leftPct}% + 8px)`;
+      name.innerHTML = `<span class="surname">${c.surname}</span>`;
+    } else if (leftPct > 50) {
+      name.classList.add('outside-left');
+      name.style.right = `calc(${100 - leftPct}% + 8px)`;
+      name.innerHTML = `<span class="surname">${c.surname}</span>`;
+    } else {
+      name.classList.add('outside-right');
+      name.style.left = `calc(${leftPct + widthPct}% + 8px)`;
+      name.innerHTML = `<span class="surname">${c.surname}</span>`;
+    }
+    row.appendChild(name);
+
+    // Year label — birth year before bar (small, faint)
+    const years = document.createElement('div');
+    years.className = 'years';
+    years.style.right = `calc(${100 - leftPct}% + 6px)`;
+    years.textContent = c.birth;
+    row.appendChild(years);
+
+    // Death year after bar
+    const yearsRight = document.createElement('div');
+    yearsRight.className = 'years';
+    yearsRight.style.left = `calc(${leftPct + widthPct}% + 6px)`;
+    yearsRight.textContent = isLiving ? '' : c.death;
+    // Don't show death year if name is to the right (would collide)
+    if (name.classList.contains('outside-right')) {
+      yearsRight.style.display = 'none';
+    }
+    row.appendChild(yearsRight);
+
+    // Hide birth-year label if name is to the left of bar (would collide)
+    if (name.classList.contains('outside-left')) {
+      years.style.display = 'none';
+    }
+
+    // Hover tooltip via dataset
+    row.dataset.name = c.name;
+    row.dataset.birth = c.birth;
+    row.dataset.death = isLiving ? 'present' : c.death;
+    row.dataset.age = isLiving ? (effectiveDeath - c.birth) + ' (so far)' : (c.death - c.birth);
+    row.dataset.era = c.era;
+    row.dataset.works = c.works;
+    row.dataset.hours = c.hours;
+    row.dataset.firstWork = c.firstWork;
+    row.dataset.lastWork = isStillActive ? 'present' : c.lastWork;
+    row.dataset.silentYears = !isStillActive ? (effectiveDeath - c.lastWork) : 0;
+
+    rows.appendChild(row);
+  });
+
+  tl.appendChild(rows);
+
+  // ===== Connections =====
+  // from/to are indices into the composers array (0-based)
+  const connections = [
+    { from: 3,  to: 4,  year: 1785, posthumous: false, note: 'Haydn and Mozart became close friends in Vienna in the 1780s. Mozart dedicated his six "Haydn" Quartets to him; Haydn told Leopold Mozart his son was "the greatest composer known to me."' },
+    { from: 3,  to: 5,  year: 1793, posthumous: false, note: 'Beethoven studied counterpoint with Haydn in Vienna, 1792–94. The lessons were uneven (Beethoven secretly took extra lessons with Schenk), but the connection is direct.' },
+    { from: 4,  to: 5,  year: 1787, posthumous: false, note: 'A 16-year-old Beethoven traveled to Vienna in 1787 hoping to study with Mozart. He is said to have played for him; the visit was cut short when his mother fell ill.' },
+    { from: 5,  to: 6,  year: 1827, posthumous: false, note: 'Schubert idolized Beethoven and was a torchbearer at his funeral in March 1827. He died 20 months later and was buried near him at his own request.' },
+    { from: 1,  to: 8,  year: 1829, posthumous: true,  note: 'Mendelssohn led the famous 1829 Berlin revival of Bach\'s St. Matthew Passion — the first performance since Bach\'s death — beginning the modern Bach revival.' },
+    { from: 8,  to: 10, year: 1840, posthumous: false, note: 'Mendelssohn and Schumann were close friends and colleagues at the Leipzig Conservatory. Schumann was devastated by Mendelssohn\'s early death in 1847.' },
+    { from: 10, to: 14, year: 1853, posthumous: false, note: 'Schumann\'s 1853 essay "Neue Bahnen" hailed the 20-year-old Brahms as the heir to Beethoven, launching his career. Brahms remained close to the Schumann family for life.' },
+    { from: 11, to: 12, year: 1865, posthumous: false, note: 'Liszt championed Wagner\'s music for decades and conducted the premiere of Lohengrin (1850). Wagner married Liszt\'s daughter Cosima in 1870.' },
+    { from: 14, to: 16, year: 1875, posthumous: false, note: 'Brahms championed Dvořák, helping him win the Austrian State Stipend in 1875 and recommending him to his publisher Simrock — making Dvořák internationally known.' },
+    { from: 17, to: 23, year: 1899, posthumous: false, note: 'Ravel was Fauré\'s composition student at the Paris Conservatoire from 1897–1903. Fauré reported "a distinct gain in maturity, engaging wealth of imagination" and defended Ravel through the 1905 Prix de Rome scandal.' },
+    { from: 12, to: 18, year: 1882, posthumous: true,  note: 'Mahler was Wagner\'s most direct symphonic descendant, devoting much of his conducting career — at Vienna, the Met, and elsewhere — to Wagner\'s operas.' },
+    { from: 15, to: 22, year: 1892, posthumous: false, note: 'Tchaikovsky encouraged the young Rachmaninoff at the Moscow Conservatory and championed his student opera Aleko in 1892. Rachmaninoff was deeply shaken by his death the following year.' },
+    { from: 19, to: 23, year: 1905, posthumous: false, note: 'Debussy and Ravel were the defining French composers of their generation. They knew each other, premiered each other\'s works, and were eventually rivals in the press.' },
+    { from: 18, to: 26, year: 1925, posthumous: true,  note: 'Mahler\'s symphonic style — its scale, irony, and emotional extremity — was a defining influence on Shostakovich, especially in his later symphonies and string quartets.' },
+    { from: 26, to: 27, year: 1969, posthumous: false, note: 'Britten and Shostakovich became close friends after meeting in London in 1960. Britten dedicated The Prodigal Son (1968) to Shostakovich; Shostakovich dedicated his Symphony No. 14 (1969) back to Britten — they called it "our symphony" in correspondence.' },
+    { from: 27, to: 28, year: 1963, posthumous: false, note: 'Rutter sang as a Highgate School chorister on the famous 1963 Decca premiere recording of Britten\'s War Requiem under Britten\'s baton. He cites Britten and David Willcocks as the two main formative influences on his music.' },
+    { from: 17, to: 28, year: 1985, posthumous: true,  note: 'Fauré\'s Requiem is widely understood as the structural and emotional model for Rutter\'s own Requiem (1985) — both quiet, consoling, and notable for what they leave out (the Dies irae) as much as what they include.' },
+  ];
+
+  // Create SVG overlay
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'connections hidden');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  rows.appendChild(svg);
+
+  function drawConnections() {
+    const rowsRect = rows.getBoundingClientRect();
+    const W = rowsRect.width;
+    const H = rowsRect.height;
+    if (W === 0) return;
+
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+
+    // Clear
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    function xFromYear(year) {
+      return ((year - START_YEAR) / yearSpan) * W;
+    }
+    function yFromIndex(idx) {
+      return idx * ROW_HEIGHT + ROW_HEIGHT / 2;
+    }
+
+    connections.forEach((conn, i) => {
+      const x = xFromYear(conn.year);
+      const y1 = yFromIndex(conn.from);
+      const y2 = yFromIndex(conn.to);
+      const dy = Math.abs(y2 - y1);
+
+      // Curve bulges to the right; bulge scales with vertical distance
+      const bulge = Math.min(70, 12 + dy * 0.35);
+
+      const path = document.createElementNS(svgNS, 'path');
+      const d = `M ${x.toFixed(1)} ${y1} C ${(x + bulge).toFixed(1)} ${y1}, ${(x + bulge).toFixed(1)} ${y2}, ${x.toFixed(1)} ${y2}`;
+      path.setAttribute('d', d);
+      if (conn.posthumous) path.classList.add('dashed');
+      path.style.animationDelay = (1000 + i * 90) + 'ms';
+      path.dataset.note = conn.note;
+      path.dataset.from = composers[conn.from].name;
+      path.dataset.to = composers[conn.to].name;
+      path.dataset.year = conn.year;
+      path.dataset.fromIdx = conn.from;
+      path.dataset.toIdx = conn.to;
+
+      // Endpoint dots
+      const c1 = document.createElementNS(svgNS, 'circle');
+      c1.setAttribute('cx', x);
+      c1.setAttribute('cy', y1);
+      c1.setAttribute('r', 2.4);
+      c1.classList.add('endpoint');
+      c1.dataset.connIdx = i;
+
+      const c2 = document.createElementNS(svgNS, 'circle');
+      c2.setAttribute('cx', x);
+      c2.setAttribute('cy', y2);
+      c2.setAttribute('r', 2.4);
+      c2.classList.add('endpoint');
+      c2.dataset.connIdx = i;
+
+      svg.appendChild(path);
+      svg.appendChild(c1);
+      svg.appendChild(c2);
+
+      // Hover handling on the path
+      path.addEventListener('mousemove', (e) => {
+        path.classList.add('active');
+        c1.classList.add('active');
+        c2.classList.add('active');
+        tooltip.innerHTML = `
+          <div class="tt-name">${composers[conn.from].surname} → ${composers[conn.to].surname}</div>
+          <div class="tt-meta">${conn.year} · ${conn.posthumous ? 'Posthumous influence' : 'Direct contact'}</div>
+          <div class="tt-works">${conn.note}</div>
+        `;
+        tooltip.classList.add('show');
+        positionTooltip(e);
+      });
+      path.addEventListener('mouseleave', () => {
+        path.classList.remove('active');
+        c1.classList.remove('active');
+        c2.classList.remove('active');
+        tooltip.classList.remove('show');
+      });
+    });
+
+    // Trigger draw-in animation on first render
+    if (!svg.classList.contains('animate')) {
+      svg.classList.add('animate');
+    }
+  }
+
+  // Initial draw + redraw on resize
+  requestAnimationFrame(drawConnections);
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      svg.classList.remove('animate'); // skip animation on resize
+      drawConnections();
+    }, 80);
+  });
+
+  // Shared tooltip positioner
+  function positionTooltip(e) {
+    const rect = tooltip.getBoundingClientRect();
+    let x = e.clientX + 14;
+    let y = e.clientY + 14;
+    if (x + rect.width > window.innerWidth - 10) x = e.clientX - rect.width - 14;
+    if (y + rect.height > window.innerHeight - 10) y = e.clientY - rect.height - 14;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+  }
+
+  // Toggle handler for connections visibility
+  const toggleBtn = document.getElementById('toggleConnections');
+  toggleBtn.addEventListener('click', () => {
+    const isPressed = toggleBtn.getAttribute('aria-pressed') === 'true';
+    const next = !isPressed;
+    toggleBtn.setAttribute('aria-pressed', next);
+    svg.classList.toggle('hidden', !next);
+  });
+
+  // ===== End connections =====
+
+  // Tooltip behavior
+  const tooltip = document.getElementById('tooltip');
+  const eraNames = {
+    baroque: 'Baroque',
+    classical: 'Classical',
+    romantic: 'Romantic',
+    'late-rom': 'Late Romantic',
+    modern: '20th Century',
+  };
+
+  document.querySelectorAll('.row').forEach(row => {
+    row.addEventListener('mousemove', (e) => {
+      const age = row.dataset.age;
+      const silent = parseInt(row.dataset.silentYears, 10);
+      const silentNote = silent >= 5 ? ` <span class="tt-silence">— silent for ${silent} years</span>` : '';
+      tooltip.innerHTML = `
+        <div class="tt-name">${row.dataset.name}</div>
+        <div class="tt-meta">${row.dataset.birth} – ${row.dataset.death} · ${age} years · ${eraNames[row.dataset.era]}</div>
+        <div class="tt-stats">~${row.dataset.hours} hrs of music · Active ${row.dataset.firstWork}–${row.dataset.lastWork}${silentNote}</div>
+        <div class="tt-works">${row.dataset.works}</div>
+      `;
+      tooltip.classList.add('show');
+      const rect = tooltip.getBoundingClientRect();
+      let x = e.clientX + 14;
+      let y = e.clientY + 14;
+      if (x + rect.width > window.innerWidth - 10) x = e.clientX - rect.width - 14;
+      if (y + rect.height > window.innerHeight - 10) y = e.clientY - rect.height - 14;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    });
+    row.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+  });
+</script>
+</body>
+</html>
