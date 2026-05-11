@@ -16,7 +16,7 @@
     --ink-faint: #8a8170;
     --rule: #c9bea7;
     --baroque: #6b1d2c;
-    --classical: #8a6d1c;
+    --classical: #7a6015;
     --romantic: #1f4f3c;
     --late-rom: #2a3a6b;
     --modern: #4a2a5c;
@@ -527,12 +527,16 @@
     --ink-soft: #c0a880;
     --ink-faint: #6a5a40;
     --rule: #352c20;
-    --baroque: #d44060;
+    --baroque: #c01c38;
     --classical: #c8982a;
-    --romantic: #38886a;
-    --late-rom: #4868b8;
-    --modern: #885ab0;
+    --romantic: #206848;
+    --late-rom: #3858a8;
+    --modern: #7848a0;
   }
+  /* Inside names: use cream text in dark mode (bars are dark enough for 4.5:1),
+     except classical whose bar is light — keep dark text there. */
+  html.dark .composer-name.inside { color: var(--ink); }
+  html.dark .row[data-era="classical"] .composer-name.inside { color: var(--bg); }
   html.dark body {
     background-image:
       radial-gradient(circle at 20% 30%, rgba(200, 152, 42, 0.07) 0%, transparent 50%),
