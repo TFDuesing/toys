@@ -560,6 +560,22 @@
     opacity: 0.95;
   }
 
+  /* Dark mode: legend SVG lines invisible on dark bg — use ink-soft */
+  html.dark .legend-item svg path {
+    stroke: var(--ink-soft);
+  }
+
+  /* Dark mode: tooltip bg flips to cream, so hardcoded light colors become invisible */
+  html.dark .tooltip .tt-stats {
+    color: rgba(26, 24, 20, 0.55);
+  }
+  html.dark .tooltip .tt-works {
+    color: rgba(26, 24, 20, 0.72);
+  }
+  html.dark .tooltip .tt-silence {
+    color: #7a3a10;
+  }
+
   /* 3. Era filter */
   .legend-item[data-era] {
     cursor: pointer;
