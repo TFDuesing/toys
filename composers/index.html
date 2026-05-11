@@ -113,6 +113,7 @@
     margin-bottom: 28px;
     padding: 14px 0;
     border-bottom: 1px dashed var(--rule);
+    align-items: center;
   }
 
   .legend-item {
@@ -129,6 +130,7 @@
     width: 16px;
     height: 10px;
     border-radius: 1px;
+    transition: box-shadow 0.15s ease;
   }
   .swatch.baroque   { background: var(--baroque); }
   .swatch.classical { background: var(--classical); }
@@ -143,7 +145,13 @@
     padding-bottom: 16px;
     margin: 0 -8px;
     padding: 0 8px 16px;
+    /* 7. Styled scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) var(--bg-2);
   }
+  .timeline-wrap::-webkit-scrollbar { height: 6px; }
+  .timeline-wrap::-webkit-scrollbar-track { background: var(--bg-2); border-radius: 3px; }
+  .timeline-wrap::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
 
   .timeline {
     position: relative;
@@ -209,7 +217,8 @@
     position: relative;
     height: 30px;
     border-bottom: 1px solid rgba(201, 190, 167, 0.4);
-    transition: background 0.18s ease;
+    transition: background 0.18s ease, opacity 0.2s ease;
+    cursor: pointer;
   }
 
   .row:hover {
@@ -266,7 +275,7 @@
     border-radius: 1px;
     z-index: 2;
     transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
-    cursor: default;
+    cursor: pointer;
   }
   .bar.baroque   { background: var(--baroque); }
   .bar.classical { background: var(--classical); }
@@ -350,6 +359,10 @@
     color: var(--ink);
     background: rgba(255, 255, 255, 0.3);
   }
+  .toggle-btn:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
   .toggle-btn .dot {
     width: 8px;
     height: 8px;
@@ -417,7 +430,7 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.15s ease;
-    z-index: 100;
+    z-index: 200;
     max-width: 280px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.18);
   }
@@ -466,6 +479,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
+    align-items: center;
   }
 
   /* Page load animation */
@@ -482,6 +496,295 @@
     .page { padding: 24px 16px 40px; }
     .header { flex-direction: column; align-items: flex-start; }
     .subtitle { text-align: left; }
+  }
+
+  /* ===== ADDITIONS ===== */
+
+  /* 4. Paper grain texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 150;
+    opacity: 0.038;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+  }
+
+  /* 6. Living composer pulse */
+  @keyframes breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.68; }
+  }
+
+  /* 5. Candlelight dark mode */
+  html.dark {
+    --bg: #100d08;
+    --bg-2: #1c1710;
+    --ink: #f0e6cc;
+    --ink-soft: #c0a880;
+    --ink-faint: #6a5a40;
+    --rule: #352c20;
+    --baroque: #d44060;
+    --classical: #c8982a;
+    --romantic: #38886a;
+    --late-rom: #4868b8;
+    --modern: #885ab0;
+  }
+  html.dark body {
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(200, 152, 42, 0.07) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(56, 136, 106, 0.07) 0%, transparent 50%);
+  }
+  html.dark .row:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+  html.dark .connections path {
+    stroke: #b8845a;
+    filter: drop-shadow(0 0 3px rgba(184, 132, 90, 0.4));
+    opacity: 0.45;
+  }
+  html.dark .connections path:hover,
+  html.dark .connections path.active {
+    opacity: 0.95;
+    filter: drop-shadow(0 0 6px rgba(184, 132, 90, 0.7));
+  }
+  html.dark .connections circle {
+    fill: #b8845a;
+  }
+  html.dark .connections path.conn-focused {
+    stroke: #d4a070;
+    filter: drop-shadow(0 0 5px rgba(212, 160, 112, 0.8));
+    opacity: 0.95;
+  }
+
+  /* 3. Era filter */
+  .legend-item[data-era] {
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+    padding: 3px 6px;
+    margin: -3px -6px;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .legend-item[data-era]:hover {
+    background: rgba(128, 128, 128, 0.09);
+  }
+  .legend-item[data-era].era-active .swatch {
+    box-shadow: 0 0 0 2px currentColor;
+  }
+  .legend-item[data-era].era-active {
+    color: var(--ink);
+  }
+  .rows.era-filtered .row {
+    opacity: 0.12;
+  }
+  .rows.era-filtered .row.era-match {
+    opacity: 1;
+  }
+
+  /* 8. Keyboard navigation */
+  .row:focus-visible {
+    outline: 2px solid var(--ink-soft);
+    outline-offset: -2px;
+    border-radius: 1px;
+  }
+
+  /* 2. Composer focus mode */
+  .rows.has-focus .row {
+    opacity: 0.12;
+  }
+  .rows.has-focus .row.focused {
+    opacity: 1;
+  }
+  .rows.has-focus .row.focused:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+  .rows.has-focus .connections path {
+    opacity: 0.06;
+  }
+  .rows.has-focus .connections path.conn-focused {
+    opacity: 0.95;
+    stroke-width: 2;
+  }
+  .rows.has-focus .connections circle {
+    opacity: 0.1;
+  }
+  .rows.has-focus .connections circle.conn-focused-ep {
+    opacity: 1;
+    r: 3;
+  }
+
+  /* Detail panel */
+  .detail-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-top: 1.5px solid var(--ink);
+    padding: 20px 32px 28px;
+    z-index: 180;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    max-height: 55vh;
+    overflow-y: auto;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.12);
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+  }
+  .detail-panel.show {
+    transform: translateY(0);
+  }
+  .detail-panel-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: start;
+  }
+  .detail-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(26px, 4vw, 46px);
+    font-weight: 500;
+    font-style: italic;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .detail-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+  .detail-works {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .detail-connections-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .detail-connections {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .detail-conn-item {
+    padding: 8px 12px;
+    border-left: 2px solid var(--rule);
+    background: rgba(128, 128, 128, 0.04);
+  }
+  .detail-conn-who {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    color: var(--ink);
+  }
+  .detail-conn-note {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .detail-close {
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 18px;
+    line-height: 1;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .detail-close:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .detail-close:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  /* 1. Year cursor */
+  .year-cursor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--ink);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    z-index: 10;
+  }
+  .timeline-wrap.cursor-active .year-cursor {
+    opacity: 0.6;
+  }
+  .year-cursor-label {
+    position: absolute;
+    top: 6px;
+    left: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    white-space: nowrap;
+    background: var(--bg);
+    padding: 1px 4px;
+    border-radius: 2px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  }
+  .year-cursor-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--bg);
+    background: var(--ink);
+    padding: 2px 7px;
+    border-radius: 2px;
+    white-space: nowrap;
+    opacity: 0.88;
+  }
+  .year-cursor.flip .year-cursor-label,
+  .year-cursor.flip .year-cursor-badge {
+    left: auto;
+    right: 5px;
+  }
+
+  /* Year cursor row states — override era/focus opacity on hover */
+  .timeline-wrap.cursor-active .rows .row {
+    opacity: 0.18 !important;
+    transition: opacity 0.08s ease;
+  }
+  .timeline-wrap.cursor-active .rows .row.cursor-alive {
+    opacity: 0.55 !important;
+  }
+  .timeline-wrap.cursor-active .rows .row.cursor-composing {
+    opacity: 1 !important;
   }
 </style>
 </head>
@@ -504,11 +807,11 @@
   </div>
 
   <div class="legend">
-    <div class="legend-item"><span class="swatch baroque"></span>Baroque · 1600–1750</div>
-    <div class="legend-item"><span class="swatch classical"></span>Classical · 1750–1820</div>
-    <div class="legend-item"><span class="swatch romantic"></span>Romantic · 1820–1880</div>
-    <div class="legend-item"><span class="swatch late-rom"></span>Late Romantic · 1880–1910</div>
-    <div class="legend-item"><span class="swatch modern"></span>20th Century · 1910–</div>
+    <div class="legend-item" data-era="baroque"><span class="swatch baroque"></span>Baroque · 1600–1750</div>
+    <div class="legend-item" data-era="classical"><span class="swatch classical"></span>Classical · 1750–1820</div>
+    <div class="legend-item" data-era="romantic"><span class="swatch romantic"></span>Romantic · 1820–1880</div>
+    <div class="legend-item" data-era="late-rom"><span class="swatch late-rom"></span>Late Romantic · 1880–1910</div>
+    <div class="legend-item" data-era="modern"><span class="swatch modern"></span>20th Century · 1910–</div>
     <div class="legend-item" style="margin-left:auto">
       <svg width="22" height="10" style="overflow:visible">
         <path d="M 1 5 Q 11 -3 21 5" fill="none" stroke="#2a1f12" stroke-width="1" opacity="0.6"/>
@@ -525,6 +828,10 @@
       <span class="dot"></span>
       <span>Connections</span>
     </button>
+    <button class="toggle-btn" id="darkToggle" aria-pressed="false" type="button">
+      <span class="dot"></span>
+      <span>Night</span>
+    </button>
   </div>
 
   <div class="timeline-wrap">
@@ -533,10 +840,13 @@
 
   <div class="footer">
     <span>Sources: standard biographical records</span>
+    <span>Click any composer to focus · Click era swatches to filter</span>
     <span>Drawn in the year 2026</span>
   </div>
 
 </div>
+
+<div class="detail-panel" id="detailPanel"></div>
 
 <div class="tooltip" id="tooltip"></div>
 
@@ -549,9 +859,9 @@
     { name: 'Johann Sebastian Bach',    surname: 'Bach',          birth: 1685, death: 1750, era: 'baroque',   hours: 110, firstWork: 1700, lastWork: 1750, works: 'Mass in B minor; St. Matthew Passion; Brandenburg Concertos' },
     { name: 'George Frideric Handel',   surname: 'Handel',        birth: 1685, death: 1759, era: 'baroque',   hours: 90,  firstWork: 1702, lastWork: 1757, works: 'Messiah; Water Music; Music for the Royal Fireworks' },
     { name: 'Joseph Haydn',             surname: 'Haydn',         birth: 1732, death: 1809, era: 'classical', hours: 95,  firstWork: 1750, lastWork: 1803, works: '104 symphonies; The Creation; String Quartets Op. 76' },
-    { name: 'Wolfgang Amadeus Mozart',  surname: 'Mozart',        birth: 1756, death: 1791, era: 'classical', hours: 70,  firstWork: 1761, lastWork: 1791, works: 'Don Giovanni; Requiem; Symphony No. 41 “Jupiter”' },
+    { name: 'Wolfgang Amadeus Mozart',  surname: 'Mozart',        birth: 1756, death: 1791, era: 'classical', hours: 70,  firstWork: 1761, lastWork: 1791, works: 'Don Giovanni; Requiem; Symphony No. 41 "Jupiter"' },
     { name: 'Ludwig van Beethoven',     surname: 'Beethoven',     birth: 1770, death: 1827, era: 'classical', hours: 40,  firstWork: 1782, lastWork: 1826, works: '9 symphonies; Missa Solemnis; late string quartets' },
-    { name: 'Franz Schubert',           surname: 'Schubert',      birth: 1797, death: 1828, era: 'romantic',  hours: 50,  firstWork: 1810, lastWork: 1828, works: 'Winterreise; Symphony No. 8 “Unfinished”; String Quintet' },
+    { name: 'Franz Schubert',           surname: 'Schubert',      birth: 1797, death: 1828, era: 'romantic',  hours: 50,  firstWork: 1810, lastWork: 1828, works: 'Winterreise; Symphony No. 8 "Unfinished"; String Quintet' },
     { name: 'Hector Berlioz',           surname: 'Berlioz',       birth: 1803, death: 1869, era: 'romantic',  hours: 25,  firstWork: 1818, lastWork: 1862, works: 'Symphonie fantastique; Grande messe des morts; Les Troyens' },
     { name: 'Felix Mendelssohn',        surname: 'Mendelssohn',   birth: 1809, death: 1847, era: 'romantic',  hours: 30,  firstWork: 1820, lastWork: 1847, works: 'Elijah; Violin Concerto in E minor; Italian Symphony' },
     { name: 'Frédéric Chopin',          surname: 'Chopin',        birth: 1810, death: 1849, era: 'romantic',  hours: 12,  firstWork: 1817, lastWork: 1849, works: 'Ballades; Nocturnes; Piano Concertos Nos. 1 & 2' },
@@ -560,10 +870,10 @@
     { name: 'Richard Wagner',           surname: 'Wagner',        birth: 1813, death: 1883, era: 'romantic',  hours: 55,  firstWork: 1832, lastWork: 1882, works: 'Der Ring des Nibelungen; Tristan und Isolde; Parsifal' },
     { name: 'Giuseppe Verdi',           surname: 'Verdi',         birth: 1813, death: 1901, era: 'romantic',  hours: 70,  firstWork: 1839, lastWork: 1898, works: 'La traviata; Aida; Requiem; Otello' },
     { name: 'Johannes Brahms',          surname: 'Brahms',        birth: 1833, death: 1897, era: 'romantic',  hours: 30,  firstWork: 1851, lastWork: 1896, works: 'Ein deutsches Requiem; 4 symphonies; Violin Concerto' },
-    { name: 'Pyotr Ilyich Tchaikovsky', surname: 'Tchaikovsky',   birth: 1840, death: 1893, era: 'romantic',  hours: 40,  firstWork: 1864, lastWork: 1893, works: 'Swan Lake; 1812 Overture; Symphony No. 6 “Pathétique”' },
-    { name: 'Antonín Dvořák',           surname: 'Dvořák',        birth: 1841, death: 1904, era: 'romantic',  hours: 30,  firstWork: 1862, lastWork: 1904, works: 'Symphony No. 9 “New World”; Cello Concerto; Stabat Mater' },
+    { name: 'Pyotr Ilyich Tchaikovsky', surname: 'Tchaikovsky',   birth: 1840, death: 1893, era: 'romantic',  hours: 40,  firstWork: 1864, lastWork: 1893, works: 'Swan Lake; 1812 Overture; Symphony No. 6 "Pathétique"' },
+    { name: 'Antonín Dvořák',           surname: 'Dvořák',        birth: 1841, death: 1904, era: 'romantic',  hours: 30,  firstWork: 1862, lastWork: 1904, works: 'Symphony No. 9 "New World"; Cello Concerto; Stabat Mater' },
     { name: 'Gabriel Fauré',             surname: 'Fauré',         birth: 1845, death: 1924, era: 'late-rom',  hours: 15,  firstWork: 1860, lastWork: 1924, works: 'Requiem; Pavane; Pelléas et Mélisande; many mélodies' },
-    { name: 'Gustav Mahler',            surname: 'Mahler',        birth: 1860, death: 1911, era: 'late-rom',  hours: 15,  firstWork: 1880, lastWork: 1910, works: 'Symphony No. 2 “Resurrection”; Das Lied von der Erde; Symphony No. 9' },
+    { name: 'Gustav Mahler',            surname: 'Mahler',        birth: 1860, death: 1911, era: 'late-rom',  hours: 15,  firstWork: 1880, lastWork: 1910, works: 'Symphony No. 2 "Resurrection"; Das Lied von der Erde; Symphony No. 9' },
     { name: 'Claude Debussy',           surname: 'Debussy',       birth: 1862, death: 1918, era: 'late-rom',  hours: 15,  firstWork: 1880, lastWork: 1917, works: 'Prélude à l’après-midi d’un faune; La mer; Pelléas et Mélisande' },
     { name: 'Richard Strauss',          surname: 'R. Strauss',    birth: 1864, death: 1949, era: 'late-rom',  hours: 55,  firstWork: 1880, lastWork: 1948, works: 'Also sprach Zarathustra; Der Rosenkavalier; Four Last Songs' },
     { name: 'Jean Sibelius',            surname: 'Sibelius',      birth: 1865, death: 1957, era: 'late-rom',  hours: 80,  firstWork: 1875, lastWork: 1929, works: 'Finlandia; Violin Concerto; 7 symphonies' },
@@ -603,7 +913,6 @@
   axis.className = 'axis';
 
   // Era bands inside axis area extending into rows
-  // We add them as absolutely positioned overlays inside timeline (behind rows)
   const bandsContainer = document.createElement('div');
   bandsContainer.style.position = 'absolute';
   bandsContainer.style.left = '0';
@@ -653,7 +962,7 @@
   rows.style.position = 'relative';
   rows.appendChild(bandsContainer);
 
-  // Bar height encodes total composed output (square-root scale to compress the range)
+  // Bar height encodes total composed output (square-root scale)
   function barHeight(hours) {
     const minH = 5;
     const maxH = 22;
@@ -661,6 +970,9 @@
     const t = Math.sqrt(Math.min(hours, maxHours) / maxHours);
     return minH + (maxH - minH) * t;
   }
+
+  // Focus mode state (declared before forEach so closures can reference it)
+  let focusedIdx = -1;
 
   composers.forEach((c, i) => {
     const row = document.createElement('div');
@@ -694,19 +1006,22 @@
     activeBar.style.animationDelay = (i * 35 + 120) + 'ms';
     row.appendChild(activeBar);
 
-    // Composer name — placement uses the lifespan bar geometry
+    // 6. Breathe animation for living active bar — starts after drawBar finishes
+    if (isStillActive) {
+      const drawFinishMs = i * 35 + 120 + 950;
+      setTimeout(() => {
+        activeBar.style.animation = 'breathe 3.5s ease-in-out infinite';
+        activeBar.style.animationDelay = '';
+      }, drawFinishMs);
+    }
+
+    // Composer name placement
     const leftPct = lifeLeft;
     const widthPct = lifeWidth;
 
-    // Composer name — placed cleverly: if bar is wide enough, inside; if at right edge, before the bar; otherwise after
     const name = document.createElement('div');
     name.className = 'composer-name';
 
-    // Decide placement
-    // Approximate pixel width: depends on viewport. Use percentage logic:
-    // If bar width > 14% of timeline → name inside bar (left-padded)
-    // Else if bar starts in right half (>50%) → name to the LEFT of bar
-    // Else → name to the RIGHT of bar
     if (widthPct > 14) {
       name.classList.add('inside');
       name.style.left = `calc(${leftPct}% + 8px)`;
@@ -722,30 +1037,27 @@
     }
     row.appendChild(name);
 
-    // Year label — birth year before bar (small, faint)
+    // Year labels
     const years = document.createElement('div');
     years.className = 'years';
     years.style.right = `calc(${100 - leftPct}% + 6px)`;
     years.textContent = c.birth;
     row.appendChild(years);
 
-    // Death year after bar
     const yearsRight = document.createElement('div');
     yearsRight.className = 'years';
     yearsRight.style.left = `calc(${leftPct + widthPct}% + 6px)`;
     yearsRight.textContent = isLiving ? '' : c.death;
-    // Don't show death year if name is to the right (would collide)
     if (name.classList.contains('outside-right')) {
       yearsRight.style.display = 'none';
     }
     row.appendChild(yearsRight);
 
-    // Hide birth-year label if name is to the left of bar (would collide)
     if (name.classList.contains('outside-left')) {
       years.style.display = 'none';
     }
 
-    // Hover tooltip via dataset
+    // Dataset for tooltip
     row.dataset.name = c.name;
     row.dataset.birth = c.birth;
     row.dataset.death = isLiving ? 'present' : c.death;
@@ -756,6 +1068,18 @@
     row.dataset.firstWork = c.firstWork;
     row.dataset.lastWork = isStillActive ? 'present' : c.lastWork;
     row.dataset.silentYears = !isStillActive ? (effectiveDeath - c.lastWork) : 0;
+    row.dataset.idx = i;
+
+    // 8. Keyboard navigation
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-label', `${c.name}, ${c.birth}–${isLiving ? 'present' : c.death}, ${c.era} era`);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusComposer(i); }
+    });
+
+    // 2. Focus mode — click to focus
+    row.addEventListener('click', () => focusComposer(i));
 
     rows.appendChild(row);
   });
@@ -763,7 +1087,6 @@
   tl.appendChild(rows);
 
   // ===== Connections =====
-  // from/to are indices into the composers array (0-based)
   const connections = [
     { from: 3,  to: 4,  year: 1785, posthumous: false, note: 'Haydn and Mozart became close friends in Vienna in the 1780s. Mozart dedicated his six "Haydn" Quartets to him; Haydn told Leopold Mozart his son was "the greatest composer known to me."' },
     { from: 3,  to: 5,  year: 1793, posthumous: false, note: 'Beethoven studied counterpoint with Haydn in Vienna, 1792–94. The lessons were uneven (Beethoven secretly took extra lessons with Schenk), but the connection is direct.' },
@@ -801,7 +1124,6 @@
     svg.setAttribute('width', W);
     svg.setAttribute('height', H);
 
-    // Clear
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
     function xFromYear(year) {
@@ -817,7 +1139,6 @@
       const y2 = yFromIndex(conn.to);
       const dy = Math.abs(y2 - y1);
 
-      // Curve bulges to the right; bulge scales with vertical distance
       const bulge = Math.min(70, 12 + dy * 0.35);
 
       const path = document.createElementNS(svgNS, 'path');
@@ -832,7 +1153,6 @@
       path.dataset.fromIdx = conn.from;
       path.dataset.toIdx = conn.to;
 
-      // Endpoint dots
       const c1 = document.createElementNS(svgNS, 'circle');
       c1.setAttribute('cx', x);
       c1.setAttribute('cy', y1);
@@ -851,8 +1171,9 @@
       svg.appendChild(c1);
       svg.appendChild(c2);
 
-      // Hover handling on the path
       path.addEventListener('mousemove', (e) => {
+        // 2. Focus mode guard
+        if (focusedIdx !== -1 && !path.classList.contains('conn-focused')) return;
         path.classList.add('active');
         c1.classList.add('active');
         c2.classList.add('active');
@@ -872,19 +1193,20 @@
       });
     });
 
-    // Trigger draw-in animation on first render
     if (!svg.classList.contains('animate')) {
       svg.classList.add('animate');
     }
+
+    // Re-apply focus state after redraw
+    if (focusedIdx !== -1) updateFocusedConnections();
   }
 
-  // Initial draw + redraw on resize
   requestAnimationFrame(drawConnections);
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      svg.classList.remove('animate'); // skip animation on resize
+      svg.classList.remove('animate');
       drawConnections();
     }, 80);
   });
@@ -900,7 +1222,7 @@
     tooltip.style.top = y + 'px';
   }
 
-  // Toggle handler for connections visibility
+  // Toggle connections visibility
   const toggleBtn = document.getElementById('toggleConnections');
   toggleBtn.addEventListener('click', () => {
     const isPressed = toggleBtn.getAttribute('aria-pressed') === 'true';
@@ -909,7 +1231,172 @@
     svg.classList.toggle('hidden', !next);
   });
 
-  // ===== End connections =====
+  // 5. Dark mode toggle
+  const darkToggle = document.getElementById('darkToggle');
+  const htmlEl = document.documentElement;
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    htmlEl.classList.add('dark');
+    darkToggle.setAttribute('aria-pressed', 'true');
+  }
+  darkToggle.addEventListener('click', () => {
+    const isDark = htmlEl.classList.toggle('dark');
+    darkToggle.setAttribute('aria-pressed', String(isDark));
+  });
+
+  // 3. Era filter
+  const activeEras = new Set();
+  document.querySelectorAll('.legend-item[data-era]').forEach(item => {
+    item.addEventListener('click', () => {
+      const era = item.dataset.era;
+      if (activeEras.has(era)) {
+        activeEras.delete(era);
+        item.classList.remove('era-active');
+      } else {
+        activeEras.add(era);
+        item.classList.add('era-active');
+      }
+      applyEraFilter();
+    });
+  });
+
+  function applyEraFilter() {
+    const rowEls = document.querySelectorAll('.row');
+    if (activeEras.size === 0) {
+      rows.classList.remove('era-filtered');
+      rowEls.forEach(row => row.classList.remove('era-match'));
+    } else {
+      rows.classList.add('era-filtered');
+      rowEls.forEach(row => {
+        row.classList.toggle('era-match', activeEras.has(row.dataset.era));
+      });
+    }
+  }
+
+  // 2. Focus mode functions (hoisted via function declarations)
+  function focusComposer(idx) {
+    if (focusedIdx === idx) { clearFocus(); return; }
+    focusedIdx = idx;
+    document.querySelectorAll('.row').forEach((row, i) => {
+      row.classList.toggle('focused', i === idx);
+    });
+    rows.classList.add('has-focus');
+    updateFocusedConnections();
+    showDetailPanel(idx);
+  }
+
+  function clearFocus() {
+    focusedIdx = -1;
+    document.querySelectorAll('.row').forEach(row => row.classList.remove('focused'));
+    rows.classList.remove('has-focus');
+    updateFocusedConnections();
+    document.getElementById('detailPanel').classList.remove('show');
+  }
+
+  function updateFocusedConnections() {
+    svg.querySelectorAll('path').forEach(path => {
+      const isFocused = focusedIdx !== -1 &&
+        (parseInt(path.dataset.fromIdx) === focusedIdx || parseInt(path.dataset.toIdx) === focusedIdx);
+      path.classList.toggle('conn-focused', isFocused);
+    });
+    svg.querySelectorAll('circle.endpoint').forEach(circle => {
+      if (focusedIdx === -1) { circle.classList.remove('conn-focused-ep'); return; }
+      const connIdx = parseInt(circle.dataset.connIdx);
+      const conn = connections[connIdx];
+      circle.classList.toggle('conn-focused-ep', conn.from === focusedIdx || conn.to === focusedIdx);
+    });
+  }
+
+  function showDetailPanel(idx) {
+    const c = composers[idx];
+    const panel = document.getElementById('detailPanel');
+    const eraLabel = { baroque: 'Baroque', classical: 'Classical', romantic: 'Romantic', 'late-rom': 'Late Romantic', modern: '20th Century' }[c.era];
+    const isLiving = c.death === null;
+    const isStillActive = c.lastWork === null;
+
+    const composerConns = connections.filter(conn => conn.from === idx || conn.to === idx);
+    let connsHtml = '';
+    if (composerConns.length) {
+      const items = composerConns.map(conn => {
+        const isFrom = conn.from === idx;
+        const other = composers[isFrom ? conn.to : conn.from];
+        const arrow = isFrom ? '→' : '←';
+        return `<div class="detail-conn-item">
+          <div class="detail-conn-who">${arrow} ${other.name} &middot; ${conn.year} &middot; ${conn.posthumous ? 'Influence' : 'Direct contact'}</div>
+          <div class="detail-conn-note">${conn.note}</div>
+        </div>`;
+      }).join('');
+      connsHtml = `<div class="detail-connections-label">Connections</div><div class="detail-connections">${items}</div>`;
+    }
+
+    panel.innerHTML = `
+      <div class="detail-panel-inner">
+        <div>
+          <div class="detail-name">${c.name}</div>
+          <div class="detail-meta">${c.birth} &ndash; ${isLiving ? 'present' : c.death} &middot; ${eraLabel} &middot; ~${c.hours} hrs of music &middot; Active ${c.firstWork}&ndash;${isStillActive ? 'present' : c.lastWork}</div>
+          <div class="detail-works">${c.works}</div>
+          ${connsHtml}
+        </div>
+        <button class="detail-close" id="detailClose" aria-label="Close">&times;</button>
+      </div>
+    `;
+    document.getElementById('detailClose').addEventListener('click', clearFocus);
+    panel.classList.add('show');
+  }
+
+  // Global keyboard handler
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') clearFocus();
+  });
+
+  // 1. Year cursor
+  const cursor = document.createElement('div');
+  cursor.className = 'year-cursor';
+  cursor.innerHTML = '<div class="year-cursor-label"></div><div class="year-cursor-badge"></div>';
+  tl.appendChild(cursor);
+
+  const wrap = tl.parentElement;
+  wrap.addEventListener('mousemove', (e) => {
+    const tlRect = tl.getBoundingClientRect();
+    const x = e.clientX - tlRect.left;
+    const totalWidth = tl.offsetWidth;
+
+    if (x < 0 || x > totalWidth) {
+      wrap.classList.remove('cursor-active');
+      return;
+    }
+
+    const year = Math.round(START_YEAR + (x / totalWidth) * yearSpan);
+    const clampedYear = Math.max(START_YEAR, Math.min(END_YEAR, year));
+    const leftPct = (x / totalWidth) * 100;
+
+    cursor.style.left = leftPct + '%';
+    cursor.classList.toggle('flip', leftPct > 70);
+    cursor.querySelector('.year-cursor-label').textContent = clampedYear;
+
+    wrap.classList.add('cursor-active');
+
+    let aliveCount = 0, composingCount = 0;
+    document.querySelectorAll('.row').forEach((row, i) => {
+      if (i >= composers.length) return;
+      const c = composers[i];
+      const alive = clampedYear >= c.birth && (c.death === null || clampedYear <= c.death);
+      const composing = alive && clampedYear >= c.firstWork && (c.lastWork === null || clampedYear <= c.lastWork);
+      row.classList.toggle('cursor-alive', alive);
+      row.classList.toggle('cursor-composing', composing);
+      if (alive) aliveCount++;
+      if (composing) composingCount++;
+    });
+
+    cursor.querySelector('.year-cursor-badge').textContent =
+      `${aliveCount} alive · ${composingCount} composing`;
+  });
+
+  wrap.addEventListener('mouseleave', () => {
+    wrap.classList.remove('cursor-active');
+    document.querySelectorAll('.row').forEach(row => {
+      row.classList.remove('cursor-alive', 'cursor-composing');
+    });
+  });
 
   // Tooltip behavior
   const tooltip = document.getElementById('tooltip');
@@ -923,6 +1410,8 @@
 
   document.querySelectorAll('.row').forEach(row => {
     row.addEventListener('mousemove', (e) => {
+      // 2. Don't show tooltip for dimmed rows in focus mode
+      if (focusedIdx !== -1 && !row.classList.contains('focused')) return;
       const age = row.dataset.age;
       const silent = parseInt(row.dataset.silentYears, 10);
       const silentNote = silent >= 5 ? ` <span class="tt-silence">— silent for ${silent} years</span>` : '';
