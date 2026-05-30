@@ -5,4 +5,4 @@ compatibility_date = "2025-01-01"
 [[d1_databases]]
 binding       = "DB"
 database_name = "snippets-db"
-database_id   = "REPLACE_WITH_D1_ID"
+database_id   = "e2c12817-1226-4e32-bca5-b3a82fd5e890"
