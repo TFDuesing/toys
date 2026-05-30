@@ -11,17 +11,17 @@ A collection of small, self-contained web apps ("toys") hosted on Cloudflare Pag
 
 ## Architecture
 
-**Frontend apps** live in the repository root as standalone `.html` files (e.g., `counter.html`, `soundboard.html`, `pickleball.html`). Each is fully self-contained with inline `<style>` and `<script>` tags. `index.html` is the landing page that links to all apps.
+**Frontend apps** live in the repository root as standalone `.html` files (e.g., `pickleball.html`, `soundboard.html`, `counter.html`). Each is fully self-contained with inline `<style>` and `<script>` tags. `index.html` is the landing page that links to all apps.
 
 **Backend services** live in their own directories (e.g., `counter-worker/`, `snippets-worker/`). The counter backend uses Cloudflare Workers with Durable Objects for real-time WebSocket sync and D1 (SQLite) for persistence. The snippets backend is a Cloudflare Worker backed by a D1 database with a REST API.
 
-Apps are either client-only (pickleball, soundboard) or client+worker (counter, snippets). The `snippets/` directory is a separate Cloudflare Pages app.
+Apps are either client-only (pickleball, soundboard, etc.) or client+worker (counter, snippets). The `snippets/` directory is a **separate Cloudflare Pages project** (not `toys-bm4`) with its own preview subdomain pattern (`*.snippets-<id>.pages.dev`). Each worker's `PREVIEW_ORIGIN_PATTERN` must match the Pages project that hosts its frontend.
 
 ## Commands
 
 ### Deploy the counter worker
 
-One-time setup (creates the D1 database - only needed if recreating from scratch):
+One-time setup (creates the D1 database, only needed if recreating from scratch - copy the printed `database_id` into `counter-worker/wrangler.toml`):
 
 ```shell
 npx wrangler d1 create counter-db
@@ -35,17 +35,22 @@ npx wrangler deploy --config counter-worker/wrangler.toml
 ```
 
 ### Deploy the snippets worker
-One-time setup (creates the D1 database — copy the printed `database_id` into `snippets-worker/wrangler.toml`):
-```
+
+One-time setup (creates the D1 database, only needed if recreating from scratch — copy the printed `database_id` into `snippets-worker/wrangler.toml`):
+
+```shell
 npx wrangler d1 create snippets-db
 npx wrangler d1 execute snippets-db --remote --file=snippets-worker/schema.sql --config snippets-worker/wrangler.toml
 ```
+
 Deploy:
-```
+
+```shell
 npx wrangler deploy --config snippets-worker/wrangler.toml
 ```
 
 ### Local development
+
 No build step. Open any `.html` file directly in a browser, or use a local server. The counter and snippets apps require their deployed worker backends.
 
 ## Conventions
@@ -61,3 +66,7 @@ No build step. Open any `.html` file directly in a browser, or use a local serve
 ## Deployment
 
 Push to GitHub triggers automatic Cloudflare Pages deployment. Worker changes require a manual `wrangler deploy`.
+
+## Git
+
+This repo uses **rebase-only merges**. PR branches containing a merge commit must be linearized before GitHub will accept them: `git rebase main`, resolve any conflicts, then `git push --force-with-lease`.
