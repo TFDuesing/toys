@@ -15,7 +15,7 @@ A collection of small, self-contained web apps ("toys") hosted on Cloudflare Pag
 
 **Backend services** live in their own directories (e.g., `counter-worker/`, `snippets-worker/`). The counter backend uses Cloudflare Workers with Durable Objects for real-time WebSocket sync and D1 (SQLite) for persistence. The snippets backend is a Cloudflare Worker backed by a D1 database with a REST API.
 
-Apps are either client-only (pickleball, soundboard, etc.) or client+worker (counter, snippets). The `snippets/` directory is a **separate Cloudflare Pages project** (not `toys-bm4`) with its own preview subdomain pattern (`*.snippets-<id>.pages.dev`). Each worker's `PREVIEW_ORIGIN_PATTERN` must match the Pages project that hosts its frontend.
+Apps are either client-only (pickleball, soundboard, etc.) or client+worker (counter, snippets). The `snippets/` directory is a **separate Cloudflare Pages project** (not `toys-bm4`) with its own preview subdomain pattern (`*.snippets-68u.pages.dev`). Each worker's `PREVIEW_ORIGIN_PATTERN` must match the Pages project that hosts its frontend.
 
 ## Commands
 

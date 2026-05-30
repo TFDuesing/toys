@@ -5,9 +5,11 @@ const ALLOWED_ORIGINS = [
   'https://toys.tfduesing.net',
 ];
 
+const PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.toys-bm4\.pages\.dev$/;
+
 function isAllowedOrigin(origin) {
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  if (/^https:\/\/[a-z0-9-]+\.toys-bm4\.pages\.dev$/.test(origin)) return true;
+  if (PREVIEW_ORIGIN_PATTERN.test(origin)) return true;
   return false;
 }
 
@@ -17,6 +19,7 @@ function corsHeaders(origin) {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Upgrade',
+    'Vary': 'Origin',
   };
 }
 

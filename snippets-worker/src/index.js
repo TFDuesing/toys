@@ -1,12 +1,10 @@
-// ─── CORS ──────────────────────────────────────────────────────────────────────
-// Snippets is deployed as its own Cloudflare Pages project. Add production
-// origins to ALLOWED_ORIGINS and update PREVIEW_ORIGIN_PATTERN to the project's
-// `*.pages.dev` subdomain after the first deploy.
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+
 const ALLOWED_ORIGINS = [
   'https://snippets.hair',
 ];
 
-const PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.snippets-[a-z0-9]+\.pages\.dev$/;
+const PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.snippets-68u\.pages\.dev$/;
 
 function isAllowedOrigin(origin) {
   if (ALLOWED_ORIGINS.includes(origin)) return true;
