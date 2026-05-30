@@ -388,6 +388,11 @@
         status.className = "client-list-status error";
         status.textContent = `Failed to load: ${err.message}`;
         clientList.appendChild(status);
+        const retryBtn = document.createElement("button");
+        retryBtn.className = "add-client-btn";
+        retryBtn.textContent = "Retry";
+        retryBtn.onclick = loadClients;
+        clientList.appendChild(retryBtn);
         renderError(`Could not load clients: ${err.message}`);
       }
     }
@@ -401,11 +406,15 @@
         clients.unshift(newClient);
         selectClient(newClient.id);
       } catch (err) {
-        alert(`Failed to add client: ${err.message}`);
+        const errEl = document.createElement("div");
+        errEl.className = "client-list-status error";
+        errEl.textContent = `Failed to add: ${err.message}`;
+        clientList.appendChild(errEl);
+        setTimeout(() => errEl.remove(), 4000);
       }
     }
 
-    async function deleteClient(id) {
+    async function deleteClient(id, footer) {
       if (!confirm("Delete this client and all their notes?")) return;
       try {
         await apiFetch(`/${id}`, { method: "DELETE" });
@@ -416,7 +425,12 @@
         renderClientList();
         renderEmpty();
       } catch (err) {
-        alert(`Failed to delete: ${err.message}`);
+        if (footer) {
+          const errEl = document.createElement("div");
+          errEl.className = "client-list-status error";
+          errEl.textContent = `Delete failed: ${err.message}`;
+          footer.appendChild(errEl);
+        }
       }
     }
 
@@ -517,7 +531,7 @@
       const delBtn = document.createElement("button");
       delBtn.className = "delete-btn";
       delBtn.textContent = "Delete client";
-      delBtn.onclick = () => deleteClient(id);
+      delBtn.onclick = () => deleteClient(id, deleteFooter);
       deleteFooter.appendChild(delBtn);
       notesPanel.appendChild(deleteFooter);
 
