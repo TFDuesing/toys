@@ -4,6 +4,7 @@
 // `*.pages.dev` subdomain after the first deploy.
 const ALLOWED_ORIGINS = [
   'https://toys.tfduesing.net',
+  'https://snippets.hair',
 ];
 
 const PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.snippets-[a-z0-9]+\.pages\.dev$/;
