@@ -3,7 +3,6 @@
 // origins to ALLOWED_ORIGINS and update PREVIEW_ORIGIN_PATTERN to the project's
 // `*.pages.dev` subdomain after the first deploy.
 const ALLOWED_ORIGINS = [
-  'https://toys.tfduesing.net',
   'https://snippets.hair',
 ];
 
