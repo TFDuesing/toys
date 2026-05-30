@@ -43,6 +43,7 @@ function sanitizeName(value) {
 }
 
 function sanitizeNotes(value) {
+  if (value == null) return '';
   if (typeof value !== 'string') return null;
   return value.slice(0, MAX_NOTES);
 }
