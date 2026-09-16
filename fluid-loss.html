@@ -366,10 +366,11 @@
           </div>
 
           <div class="field">
-            <label for="duration-h">Duration <span class="hint">(hours + minutes)</span></label>
+            <label for="duration-h">Duration <span class="hint">(h : min : sec)</span></label>
             <div class="control">
               <input type="number" id="duration-h" inputmode="numeric" step="1" min="0" placeholder="h" aria-label="Duration hours">
               <input type="number" id="duration-m" inputmode="numeric" step="1" min="0" placeholder="min" aria-label="Duration minutes">
+              <input type="number" id="duration-s" inputmode="numeric" step="1" min="0" placeholder="sec" aria-label="Duration seconds">
             </div>
           </div>
 
@@ -397,7 +398,7 @@
           <div class="stat-label">Fluid loss rate</div>
           <div class="rate">
             <span class="rate-value" id="rate-value">—</span>
-            <span class="rate-unit">liters per hour</span>
+            <span class="rate-unit">liters per hour <span id="rate-over"></span></span>
           </div>
         </div>
         <div class="stats">
@@ -472,11 +473,13 @@
       weightUnitEcho: $('weight-unit-echo'),
       durationH: $('duration-h'),
       durationM: $('duration-m'),
+      durationS: $('duration-s'),
       fluid: $('fluid'),
       fluidUnit: $('fluid-unit'),
       error: $('error'),
       result: $('result'),
       rateValue: $('rate-value'),
+      rateOver: $('rate-over'),
       totalValue: $('total-value'),
       deltaValue: $('delta-value'),
       pctValue: $('pct-value'),
@@ -534,9 +537,15 @@
     }
 
     function fmtDuration(minutes) {
-      const h = Math.floor(minutes / 60);
-      const m = Math.round(minutes % 60);
-      return h ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm';
+      const total = Math.round(minutes * 60);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const sec = total % 60;
+      if (h) {
+        return h + 'h ' + String(m).padStart(2, '0') + 'm' + (sec ? ' ' + String(sec).padStart(2, '0') + 's' : '');
+      }
+      if (m) return m + 'm' + (sec ? ' ' + String(sec).padStart(2, '0') + 's' : '');
+      return sec + 's';
     }
 
     function fmtTimestamp(ms) {
@@ -568,6 +577,7 @@
       const end = num(els.endWeight);
       const hours = els.durationH.value.trim() === '' ? 0 : num(els.durationH);
       const mins = els.durationM.value.trim() === '' ? 0 : num(els.durationM);
+      const secs = els.durationS.value.trim() === '' ? 0 : num(els.durationS);
       const fluid = num(els.fluid);
 
       if (!Number.isFinite(start) || !Number.isFinite(end)) {
@@ -576,10 +586,11 @@
       if (start <= 0 || end <= 0) {
         return fail('Weights must be greater than zero.');
       }
-      if (!Number.isFinite(hours) || !Number.isFinite(mins) || hours < 0 || mins < 0) {
-        return fail('Enter the duration as a positive number of hours and minutes.');
+      if (!Number.isFinite(hours) || !Number.isFinite(mins) || !Number.isFinite(secs) ||
+          hours < 0 || mins < 0 || secs < 0) {
+        return fail('Enter the duration as positive hours, minutes and seconds.');
       }
-      const durationMin = hours * 60 + mins;
+      const durationMin = hours * 60 + mins + secs / 60;
       if (durationMin <= 0) {
         return fail('Enter how long the run lasted.');
       }
@@ -629,12 +640,16 @@
       const deltaUnit = entry.weightUnit;
       const delta = entry.startWeight - entry.endWeight;
       els.rateValue.textContent = fmt(entry.rateLph, 2);
+      els.rateOver.textContent = 'over ' + fmtDuration(entry.durationMin);
       els.totalValue.textContent = fmt(entry.lostL, 2) + ' L';
       els.deltaValue.textContent = (delta >= 0 ? '−' : '+') + fmt(Math.abs(delta), 1) + ' ' + deltaUnit;
       els.pctValue.textContent = fmt(entry.pctBodyWeight, 1) + '%';
 
       let note = '';
-      if (entry.lostL < 0) {
+      if (entry.durationMin >= 12 * 60) {
+        note = 'That is a ' + fmtDuration(entry.durationMin) + ' session. Run times are often written as ' +
+          'minutes:seconds — if you meant ' + fmtDuration(entry.durationMin / 60) + ', those go in the min and sec boxes.';
+      } else if (entry.lostL < 0) {
         note = 'You finished heavier than the fluid you drank can explain — check the numbers, or you may have over-drunk during the run.';
       } else if (entry.rateLph > 4) {
         note = 'A rate above 4 L/h is higher than almost anyone sustains. Double-check the weights and the duration.';
