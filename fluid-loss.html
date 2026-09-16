@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none';">
+  <title>Running Fluid Loss</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      color-scheme: light;
+      --bg: #f5f5f0;
+      --card: #fff;
+      --surface-1: #fff;
+      --text: #222;
+      --text-primary: #0b0b0b;
+      --text-secondary: #52514e;
+      --muted: #666;
+      --accent: #1a6fb5;
+      --series-1: #2a78d6;
+      --border: #ddd;
+      --border-strong: #c4c4bc;
+      --grid: #e7e7e1;
+      --danger: #b3261e;
+      --warn-bg: #fdf3e0;
+      --warn-border: #e8c98a;
+      --warn-text: #6b4b10;
+      --radius: 8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:where(:not([data-theme="light"])) {
+        color-scheme: dark;
+        --bg: #131312;
+        --card: #1f1f1e;
+        --surface-1: #1a1a19;
+        --text: #f1f1ee;
+        --text-primary: #fff;
+        --text-secondary: #c3c2b7;
+        --muted: #a9a89e;
+        --accent: #6da7ec;
+        --series-1: #3987e5;
+        --border: #35352f;
+        --border-strong: #4a4a43;
+        --grid: #2c2c28;
+        --danger: #e66767;
+        --warn-bg: #2e2716;
+        --warn-border: #6b5a2b;
+        --warn-text: #e8cd94;
+      }
+    }
+
+    body {
+      font-family: system-ui, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding: 2.5rem 1.25rem 4rem;
+      line-height: 1.5;
+    }
+
+    .wrap { max-width: 760px; margin: 0 auto; }
+
+    header { margin-bottom: 1.75rem; }
+
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+    }
+
+    header p {
+      margin-top: 0.35rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 52ch;
+    }
+
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.9rem 1rem;
+    }
+
+    @media (max-width: 520px) {
+      .fields { grid-template-columns: 1fr; }
+      th, td { padding: 0.5rem 0.4rem; }
+      table { font-size: 0.82rem; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .hint { font-weight: 400; color: var(--muted); }
+
+    .control { display: flex; gap: 0.4rem; }
+
+    input[type="number"], select {
+      font: inherit;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 0.5rem 0.6rem;
+      min-width: 0;
+      width: 100%;
+    }
+
+    select { flex: 0 0 auto; width: auto; }
+
+    .unit-suffix {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      padding: 0 0.6rem;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .sr-only {
+      display: inline-block;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    input:focus-visible, select:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1.1rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      padding: 0.55rem 1.1rem;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--accent);
+      border-color: var(--border-strong);
+    }
+
+    .error {
+      color: var(--danger);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .result { display: none; }
+
+    .result.show {
+      display: block;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .rate {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .rate-value {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    .rate-unit { font-size: 1rem; color: var(--muted); font-weight: 600; }
+
+    .hero { margin-bottom: 0.25rem; }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note {
+      margin-top: 1rem;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .chart-wrap { position: relative; }
+    .chart-scroll { overflow-x: auto; overflow-y: hidden; }
+    svg { display: block; }
+    .bar { fill: var(--series-1); cursor: pointer; }
+    .bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .bar-hit { fill: transparent; cursor: pointer; }
+    .grid-line { stroke: var(--grid); stroke-width: 1; }
+    .axis-line { stroke: var(--border-strong); stroke-width: 1; }
+    .tick-text { fill: var(--text-secondary); font-size: 11px; font-family: system-ui, Helvetica, Arial, sans-serif; }
+    .axis-title { fill: var(--muted); font-size: 11px; font-family: system-ui, Helvetica, Arial, sans-serif; }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.82rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      white-space: nowrap;
+      z-index: 2;
+    }
+
+    .tooltip.show { opacity: 1; }
+    .tooltip .tt-rate { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .tooltip .tt-meta { color: var(--muted); }
+
+    .table-scroll { overflow-x: auto; }
+
+    table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+
+    th, td {
+      text-align: right;
+      padding: 0.5rem 0.55rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    td { font-variant-numeric: tabular-nums; }
+    td.rate-cell { font-weight: 700; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    td.del { padding-right: 0; width: 1%; }
+
+    .del-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.15rem 0.5rem;
+      font-size: 0.95rem;
+      line-height: 1.3;
+      border-radius: 5px;
+    }
+
+    .del-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 0.5rem 0;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: 0.8rem;
+      max-width: 60ch;
+      margin-top: 1.5rem;
+    }
+
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Running Fluid Loss</h1>
+      <p>Weigh yourself before and after a run to work out how fast you lose fluid, in liters per hour.</p>
+    </header>
+
+    <section>
+      <h2>New calculation</h2>
+      <form id="calc-form" novalidate>
+        <div class="fields">
+          <div class="field">
+            <label for="start-weight">Starting weight</label>
+            <div class="control">
+              <input type="number" id="start-weight" inputmode="decimal" step="0.1" min="0" placeholder="0.0" required>
+              <select id="weight-unit" aria-label="Weight unit">
+                <option value="lb">lb</option>
+                <option value="kg">kg</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="end-weight">Ending weight</label>
+            <div class="control">
+              <input type="number" id="end-weight" inputmode="decimal" step="0.1" min="0" placeholder="0.0" required>
+              <span class="unit-suffix" id="weight-unit-echo" aria-hidden="true">lb</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="duration-h">Duration <span class="hint">(hours + minutes)</span></label>
+            <div class="control">
+              <input type="number" id="duration-h" inputmode="numeric" step="1" min="0" placeholder="h" aria-label="Duration hours">
+              <input type="number" id="duration-m" inputmode="numeric" step="1" min="0" placeholder="min" aria-label="Duration minutes">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="fluid">Fluid consumed <span class="hint">(on the run)</span></label>
+            <div class="control">
+              <input type="number" id="fluid" inputmode="decimal" step="1" min="0" placeholder="0" required>
+              <select id="fluid-unit" aria-label="Fluid unit">
+                <option value="floz">fl oz</option>
+                <option value="ml">mL</option>
+                <option value="l">L</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit">Calculate &amp; save</button>
+          <span class="error" id="error" role="alert"></span>
+        </div>
+      </form>
+
+      <div class="result" id="result" aria-live="polite">
+        <div class="hero">
+          <div class="stat-label">Fluid loss rate</div>
+          <div class="rate">
+            <span class="rate-value" id="rate-value">—</span>
+            <span class="rate-unit">liters per hour</span>
+          </div>
+        </div>
+        <div class="stats">
+          <div>
+            <div class="stat-label">Total fluid lost</div>
+            <div class="stat-value" id="total-value">—</div>
+          </div>
+          <div>
+            <div class="stat-label">Weight change</div>
+            <div class="stat-value" id="delta-value">—</div>
+          </div>
+          <div>
+            <div class="stat-label">Body weight lost</div>
+            <div class="stat-value" id="pct-value">—</div>
+          </div>
+        </div>
+        <div class="note" id="note" hidden></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Fluid loss rate by session</h2>
+      <div class="chart-wrap">
+        <div class="chart-scroll" id="chart-scroll">
+          <svg id="chart" role="img" aria-label="Bar chart of fluid loss rate in liters per hour for each saved session"></svg>
+        </div>
+        <div class="tooltip" id="tooltip" role="status"></div>
+      </div>
+      <p class="empty" id="chart-empty">No sessions yet — your first calculation will show up here.</p>
+    </section>
+
+    <section>
+      <h2>History</h2>
+      <div class="table-scroll">
+        <table id="history">
+          <thead>
+            <tr>
+              <th scope="col">Recorded</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Weight change</th>
+              <th scope="col">Fluid in</th>
+              <th scope="col">Total lost</th>
+              <th scope="col">Rate (L/h)</th>
+              <th scope="col"><span class="sr-only">Delete</span></th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="history-empty">Nothing saved yet.</p>
+    </section>
+
+    <footer>
+      Fluid lost = weight lost + fluid drunk during the run, assuming 1&nbsp;kg of body mass lost equals 1&nbsp;L of fluid.
+      Urine and solid food during the run are not accounted for. Entries are stored only in this browser.
+    </footer>
+  </div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'fluid-loss-entries-v1';
+    const LB_TO_KG = 0.45359237;
+    const FLOZ_TO_L = 0.0295735295625;
+
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      form: $('calc-form'),
+      startWeight: $('start-weight'),
+      endWeight: $('end-weight'),
+      weightUnit: $('weight-unit'),
+      weightUnitEcho: $('weight-unit-echo'),
+      durationH: $('duration-h'),
+      durationM: $('duration-m'),
+      fluid: $('fluid'),
+      fluidUnit: $('fluid-unit'),
+      error: $('error'),
+      result: $('result'),
+      rateValue: $('rate-value'),
+      totalValue: $('total-value'),
+      deltaValue: $('delta-value'),
+      pctValue: $('pct-value'),
+      note: $('note'),
+      chart: $('chart'),
+      chartScroll: $('chart-scroll'),
+      chartEmpty: $('chart-empty'),
+      tooltip: $('tooltip'),
+      historyBody: $('history-body'),
+      historyEmpty: $('history-empty'),
+      history: $('history')
+    };
+
+    let entries = load();
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter((e) => e && typeof e.id === 'string' && Number.isFinite(e.rateLph));
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      } catch (err) {
+        /* storage unavailable (private mode, quota) — keep working in memory */
+      }
+    }
+
+    function toLiters(amount, unit) {
+      if (unit === 'ml') return amount / 1000;
+      if (unit === 'l') return amount;
+      return amount * FLOZ_TO_L;
+    }
+
+    function weightToKg(amount, unit) {
+      return unit === 'kg' ? amount : amount * LB_TO_KG;
+    }
+
+    function num(el) {
+      const raw = el.value.trim();
+      if (raw === '') return NaN;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : NaN;
+    }
+
+    function fmt(value, digits) {
+      return value.toFixed(digits).replace('-', '\u2212');
+    }
+
+    function fmtDuration(minutes) {
+      const h = Math.floor(minutes / 60);
+      const m = Math.round(minutes % 60);
+      return h ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm';
+    }
+
+    function fmtTimestamp(ms) {
+      const d = new Date(ms);
+      return d.toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      });
+    }
+
+    function fmtShortDate(ms) {
+      return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    function syncUnitEcho() {
+      els.weightUnitEcho.textContent = els.weightUnit.value;
+    }
+
+    els.weightUnit.addEventListener('change', syncUnitEcho);
+    syncUnitEcho();
+
+    els.form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      els.error.textContent = '';
+
+      const weightUnit = els.weightUnit.value;
+      const fluidUnit = els.fluidUnit.value;
+      const start = num(els.startWeight);
+      const end = num(els.endWeight);
+      const hours = els.durationH.value.trim() === '' ? 0 : num(els.durationH);
+      const mins = els.durationM.value.trim() === '' ? 0 : num(els.durationM);
+      const fluid = num(els.fluid);
+
+      if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        return fail('Enter both a starting and an ending weight.');
+      }
+      if (start <= 0 || end <= 0) {
+        return fail('Weights must be greater than zero.');
+      }
+      if (!Number.isFinite(hours) || !Number.isFinite(mins) || hours < 0 || mins < 0) {
+        return fail('Enter the duration as a positive number of hours and minutes.');
+      }
+      const durationMin = hours * 60 + mins;
+      if (durationMin <= 0) {
+        return fail('Enter how long the run lasted.');
+      }
+      if (!Number.isFinite(fluid) || fluid < 0) {
+        return fail('Enter how much fluid you drank (0 if none).');
+      }
+
+      const startKg = weightToKg(start, weightUnit);
+      const endKg = weightToKg(end, weightUnit);
+      const fluidL = toLiters(fluid, fluidUnit);
+      const lostL = (startKg - endKg) + fluidL;
+      const rateLph = lostL / (durationMin / 60);
+
+      const entry = {
+        id: (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+        ts: Date.now(),
+        startWeight: start,
+        endWeight: end,
+        weightUnit,
+        durationMin,
+        fluid,
+        fluidUnit,
+        fluidL,
+        lostL,
+        rateLph,
+        pctBodyWeight: ((startKg - endKg) / startKg) * 100
+      };
+
+      entries.push(entry);
+      entries.sort((a, b) => a.ts - b.ts);
+      save();
+      showResult(entry);
+      render();
+      els.form.reset();
+      els.weightUnit.value = weightUnit;
+      els.fluidUnit.value = fluidUnit;
+      syncUnitEcho();
+      els.startWeight.focus();
+    });
+
+    function fail(message) {
+      els.error.textContent = message;
+      els.result.classList.remove('show');
+    }
+
+    function showResult(entry) {
+      const deltaUnit = entry.weightUnit;
+      const delta = entry.startWeight - entry.endWeight;
+      els.rateValue.textContent = fmt(entry.rateLph, 2);
+      els.totalValue.textContent = fmt(entry.lostL, 2) + ' L';
+      els.deltaValue.textContent = (delta >= 0 ? '−' : '+') + fmt(Math.abs(delta), 1) + ' ' + deltaUnit;
+      els.pctValue.textContent = fmt(entry.pctBodyWeight, 1) + '%';
+
+      let note = '';
+      if (entry.lostL < 0) {
+        note = 'You finished heavier than the fluid you drank can explain — check the numbers, or you may have over-drunk during the run.';
+      } else if (entry.rateLph > 4) {
+        note = 'A rate above 4 L/h is higher than almost anyone sustains. Double-check the weights and the duration.';
+      } else if (entry.pctBodyWeight >= 2) {
+        note = 'You lost ' + fmt(entry.pctBodyWeight, 1) + '% of your body weight. Losses at or above 2% are where performance and heat tolerance usually start to suffer.';
+      }
+      els.note.textContent = note;
+      els.note.hidden = note === '';
+      els.result.classList.add('show');
+    }
+
+    function renderTable() {
+      els.historyBody.innerHTML = '';
+      const hasEntries = entries.length > 0;
+      els.history.hidden = !hasEntries;
+      els.historyEmpty.hidden = hasEntries;
+      if (!hasEntries) return;
+
+      for (const entry of [...entries].reverse()) {
+        const tr = document.createElement('tr');
+        const delta = entry.startWeight - entry.endWeight;
+        const cells = [
+          fmtTimestamp(entry.ts),
+          fmtDuration(entry.durationMin),
+          (delta >= 0 ? '−' : '+') + fmt(Math.abs(delta), 1) + ' ' + entry.weightUnit,
+          fmt(entry.fluid, entry.fluidUnit === 'l' ? 2 : 0) + ' ' + unitLabel(entry.fluidUnit),
+          fmt(entry.lostL, 2) + ' L'
+        ];
+        for (const text of cells) {
+          const td = document.createElement('td');
+          td.textContent = text;
+          tr.appendChild(td);
+        }
+
+        const rateTd = document.createElement('td');
+        rateTd.className = 'rate-cell';
+        rateTd.textContent = fmt(entry.rateLph, 2);
+        tr.appendChild(rateTd);
+
+        const delTd = document.createElement('td');
+        delTd.className = 'del';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'del-btn';
+        btn.textContent = '×';
+        btn.title = 'Delete this entry';
+        btn.setAttribute('aria-label', 'Delete entry from ' + fmtTimestamp(entry.ts));
+        btn.addEventListener('click', () => remove(entry.id));
+        delTd.appendChild(btn);
+        tr.appendChild(delTd);
+
+        els.historyBody.appendChild(tr);
+      }
+    }
+
+    function unitLabel(unit) {
+      if (unit === 'ml') return 'mL';
+      if (unit === 'l') return 'L';
+      return 'fl oz';
+    }
+
+    function remove(id) {
+      entries = entries.filter((entry) => entry.id !== id);
+      save();
+      hideTooltip();
+      render();
+    }
+
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    function svgEl(name, attrs) {
+      const node = document.createElementNS(SVG_NS, name);
+      for (const key in attrs) node.setAttribute(key, attrs[key]);
+      return node;
+    }
+
+    // A bar with rounded corners at the data end only — the baseline end stays square.
+    function barPath(x, top, width, height, downward) {
+      const r = Math.min(4, width / 2, height);
+      const right = x + width;
+      const bottom = top + height;
+      if (downward) {
+        return 'M' + x + ' ' + top + ' H' + right + ' V' + (bottom - r) +
+          ' a' + r + ' ' + r + ' 0 0 1 ' + -r + ' ' + r +
+          ' H' + (x + r) + ' a' + r + ' ' + r + ' 0 0 1 ' + -r + ' ' + -r + ' Z';
+      }
+      return 'M' + x + ' ' + bottom + ' V' + (top + r) +
+        ' a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + -r +
+        ' H' + (right - r) + ' a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r +
+        ' V' + bottom + ' Z';
+    }
+
+    function niceTicks(max) {
+      if (max <= 0) return { top: 1, step: 0.25 };
+      const steps = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10];
+      for (const step of steps) {
+        if (max / step <= 5) {
+          return { top: Math.ceil(max / step) * step, step };
+        }
+      }
+      const step = Math.ceil(max / 5);
+      return { top: step * 5, step };
+    }
+
+    function renderChart() {
+      const svg = els.chart;
+      svg.innerHTML = '';
+      const hasEntries = entries.length > 0;
+      els.chartEmpty.hidden = hasEntries;
+      els.chartScroll.hidden = !hasEntries;
+      if (!hasEntries) {
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        return;
+      }
+
+      const pad = { top: 28, right: 12, bottom: 44, left: 46 };
+      const height = 260;
+      const available = Math.max(els.chartScroll.clientWidth || 600, 280);
+      const slot = Math.max(28, (available - pad.left - pad.right) / entries.length);
+      const plotWidth = slot * entries.length;
+      const width = Math.max(available, plotWidth + pad.left + pad.right);
+      const plotHeight = height - pad.top - pad.bottom;
+
+      svg.setAttribute('width', width);
+      svg.setAttribute('height', height);
+      svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+      const maxRate = Math.max(...entries.map((e) => e.rateLph), 0);
+      const { top, step } = niceTicks(maxRate);
+      const minRate = Math.min(...entries.map((e) => e.rateLph), 0);
+      const bottom = minRate < 0 ? -Math.ceil(Math.abs(minRate) / step) * step : 0;
+      const span = top - bottom || 1;
+      const y = (value) => pad.top + plotHeight * (1 - (value - bottom) / span);
+
+      const tickCount = Math.round((top - bottom) / step);
+      const tickDigits = step < 1 ? 2 : 1;
+      for (let i = 0; i <= tickCount; i++) {
+        const value = bottom + i * step;
+        const yy = Math.round(y(value)) + 0.5;
+        svg.appendChild(svgEl('line', {
+          class: Math.abs(value) < 1e-9 ? 'axis-line' : 'grid-line',
+          x1: pad.left, x2: width - pad.right, y1: yy, y2: yy
+        }));
+        const label = svgEl('text', {
+          class: 'tick-text', x: pad.left - 8, y: yy + 4, 'text-anchor': 'end'
+        });
+        label.textContent = value.toFixed(tickDigits);
+        svg.appendChild(label);
+      }
+
+      const axisTitle = svgEl('text', {
+        class: 'axis-title', x: pad.left - 8, y: pad.top - 14, 'text-anchor': 'end'
+      });
+      axisTitle.textContent = 'L/h';
+      svg.appendChild(axisTitle);
+
+      const barWidth = Math.min(40, Math.max(8, slot - 10));
+      const labelEvery = Math.max(1, Math.ceil(64 / slot));
+      const zeroY = y(0);
+      let lastDateLabel = null;
+
+      entries.forEach((entry, index) => {
+        const centerX = pad.left + slot * index + slot / 2;
+        const valueY = y(entry.rateLph);
+        const barTop = Math.min(valueY, zeroY);
+        const barHeight = Math.max(Math.abs(valueY - zeroY), 2);
+        const bar = svgEl('path', {
+          class: 'bar',
+          d: barPath(centerX - barWidth / 2, barTop, barWidth, barHeight, entry.rateLph < 0),
+          tabindex: '0',
+          role: 'img',
+          'aria-label': fmt(entry.rateLph, 2) + ' liters per hour on ' + fmtTimestamp(entry.ts)
+        });
+        svg.appendChild(bar);
+
+        const hit = svgEl('rect', {
+          class: 'bar-hit',
+          x: pad.left + slot * index + 1,
+          y: pad.top,
+          width: Math.max(slot - 2, 6),
+          height: plotHeight
+        });
+        svg.appendChild(hit);
+
+        const show = () => showTooltip(entry, centerX, barTop);
+        for (const node of [bar, hit]) {
+          node.addEventListener('mouseenter', show);
+          node.addEventListener('mousemove', show);
+          node.addEventListener('mouseleave', hideTooltip);
+        }
+        bar.addEventListener('focus', show);
+        bar.addEventListener('blur', hideTooltip);
+
+        const dateText = fmtShortDate(entry.ts);
+        if (index % labelEvery === 0 && dateText !== lastDateLabel) {
+          const label = svgEl('text', {
+            class: 'tick-text', x: centerX, y: height - pad.bottom + 18, 'text-anchor': 'middle'
+          });
+          label.textContent = dateText;
+          svg.appendChild(label);
+          lastDateLabel = dateText;
+        }
+      });
+
+      const axisLabel = svgEl('text', {
+        class: 'axis-title', x: pad.left, y: height - 8, 'text-anchor': 'start'
+      });
+      axisLabel.textContent = 'Session date';
+      svg.appendChild(axisLabel);
+    }
+
+    function showTooltip(entry, centerX, barTop) {
+      const tip = els.tooltip;
+      tip.innerHTML = '';
+      const rate = document.createElement('div');
+      rate.className = 'tt-rate';
+      rate.textContent = fmt(entry.rateLph, 2) + ' L/h';
+      const meta = document.createElement('div');
+      meta.className = 'tt-meta';
+      meta.textContent = fmtTimestamp(entry.ts) + ' · ' + fmtDuration(entry.durationMin) + ' · ' + fmt(entry.lostL, 2) + ' L lost';
+      tip.appendChild(rate);
+      tip.appendChild(meta);
+      tip.classList.add('show');
+
+      const left = centerX - els.chartScroll.scrollLeft;
+      const wrapWidth = els.chartScroll.clientWidth;
+      const tipWidth = tip.offsetWidth;
+      let x = left - tipWidth / 2;
+      x = Math.max(4, Math.min(x, wrapWidth - tipWidth - 4));
+      tip.style.left = x + 'px';
+      tip.style.top = Math.max(0, barTop - tip.offsetHeight - 8) + 'px';
+    }
+
+    function hideTooltip() {
+      els.tooltip.classList.remove('show');
+    }
+
+    function render() {
+      renderTable();
+      renderChart();
+    }
+
+    els.chartScroll.addEventListener('scroll', hideTooltip);
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(renderChart, 120);
+    });
+
+    render();
+  </script>
+</body>
+</html>
