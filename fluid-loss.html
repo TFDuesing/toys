@@ -120,7 +120,7 @@
 
     .control { display: flex; gap: 0.4rem; }
 
-    input[type="number"], select {
+    input[type="number"], input[type="date"], input[type="time"], select {
       font: inherit;
       font-size: 0.95rem;
       color: var(--text);
@@ -385,6 +385,20 @@
               </select>
             </div>
           </div>
+
+          <div class="field">
+            <label for="run-date">Run date <span class="hint">(optional)</span></label>
+            <div class="control">
+              <input type="date" id="run-date">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="run-time">Start time <span class="hint">(optional)</span></label>
+            <div class="control">
+              <input type="time" id="run-time">
+            </div>
+          </div>
         </div>
 
         <div class="actions">
@@ -436,7 +450,7 @@
         <table id="history">
           <thead>
             <tr>
-              <th scope="col">Recorded</th>
+              <th scope="col">Date</th>
               <th scope="col">Duration</th>
               <th scope="col">Weight change</th>
               <th scope="col">Fluid in</th>
@@ -474,6 +488,8 @@
       durationH: $('duration-h'),
       durationM: $('duration-m'),
       durationS: $('duration-s'),
+      runDate: $('run-date'),
+      runTime: $('run-time'),
       fluid: $('fluid'),
       fluidUnit: $('fluid-unit'),
       error: $('error'),
@@ -548,12 +564,32 @@
       return sec + 's';
     }
 
-    function fmtTimestamp(ms) {
+    // Entries saved before the run date/time fields existed have no hasTime flag;
+    // their timestamp was the moment of calculation, so keep showing the clock.
+    function fmtTimestamp(ms, hasTime) {
       const d = new Date(ms);
+      if (hasTime === false) {
+        return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      }
       return d.toLocaleString(undefined, {
         year: 'numeric', month: 'short', day: 'numeric',
         hour: 'numeric', minute: '2-digit'
       });
+    }
+
+    function localDateString(d) {
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+
+    // A blank date means "now"; a date without a time means midnight that day.
+    function parseRunMoment(dateStr, timeStr) {
+      if (!dateStr && !timeStr) return { ts: Date.now(), hasTime: true };
+      const date = dateStr || localDateString(new Date());
+      const parsed = new Date(date + 'T' + (timeStr || '00:00'));
+      if (Number.isNaN(parsed.getTime())) return null;
+      return { ts: parsed.getTime(), hasTime: Boolean(timeStr) };
     }
 
     function fmtShortDate(ms) {
@@ -597,6 +633,10 @@
       if (!Number.isFinite(fluid) || fluid < 0) {
         return fail('Enter how much fluid you drank (0 if none).');
       }
+      const moment = parseRunMoment(els.runDate.value, els.runTime.value);
+      if (!moment) {
+        return fail('Enter a valid run date and time, or leave them blank to use now.');
+      }
 
       const startKg = weightToKg(start, weightUnit);
       const endKg = weightToKg(end, weightUnit);
@@ -606,7 +646,8 @@
 
       const entry = {
         id: (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
-        ts: Date.now(),
+        ts: moment.ts,
+        hasTime: moment.hasTime,
         startWeight: start,
         endWeight: end,
         weightUnit,
@@ -624,7 +665,9 @@
       save();
       showResult(entry);
       render();
+      const keptDate = els.runDate.value;
       els.form.reset();
+      els.runDate.value = keptDate;
       els.weightUnit.value = weightUnit;
       els.fluidUnit.value = fluidUnit;
       syncUnitEcho();
@@ -672,7 +715,7 @@
         const tr = document.createElement('tr');
         const delta = entry.startWeight - entry.endWeight;
         const cells = [
-          fmtTimestamp(entry.ts),
+          fmtTimestamp(entry.ts, entry.hasTime),
           fmtDuration(entry.durationMin),
           (delta >= 0 ? '−' : '+') + fmt(Math.abs(delta), 1) + ' ' + entry.weightUnit,
           fmt(entry.fluid, entry.fluidUnit === 'l' ? 2 : 0) + ' ' + unitLabel(entry.fluidUnit),
@@ -696,7 +739,7 @@
         btn.className = 'del-btn';
         btn.textContent = '×';
         btn.title = 'Delete this entry';
-        btn.setAttribute('aria-label', 'Delete entry from ' + fmtTimestamp(entry.ts));
+        btn.setAttribute('aria-label', 'Delete entry from ' + fmtTimestamp(entry.ts, entry.hasTime));
         btn.addEventListener('click', () => remove(entry.id));
         delTd.appendChild(btn);
         tr.appendChild(delTd);
@@ -822,7 +865,7 @@
           d: barPath(centerX - barWidth / 2, barTop, barWidth, barHeight, entry.rateLph < 0),
           tabindex: '0',
           role: 'img',
-          'aria-label': fmt(entry.rateLph, 2) + ' liters per hour on ' + fmtTimestamp(entry.ts)
+          'aria-label': fmt(entry.rateLph, 2) + ' liters per hour on ' + fmtTimestamp(entry.ts, entry.hasTime)
         });
         svg.appendChild(bar);
 
@@ -870,7 +913,7 @@
       rate.textContent = fmt(entry.rateLph, 2) + ' L/h';
       const meta = document.createElement('div');
       meta.className = 'tt-meta';
-      meta.textContent = fmtTimestamp(entry.ts) + ' · ' + fmtDuration(entry.durationMin) + ' · ' + fmt(entry.lostL, 2) + ' L lost';
+      meta.textContent = fmtTimestamp(entry.ts, entry.hasTime) + ' · ' + fmtDuration(entry.durationMin) + ' · ' + fmt(entry.lostL, 2) + ' L lost';
       tip.appendChild(rate);
       tip.appendChild(meta);
       tip.classList.add('show');
